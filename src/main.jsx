@@ -7,6 +7,8 @@ import About from "./pages/About";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Register from "./pages/Auth/Register";
 
+import Login from "./pages/Auth/Login";
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <Routes>
@@ -14,6 +16,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route index element={<Home />} />
         <Route path="about" element={<About />} />
         <Route path="register" element={<Register />} />
+        <Route path="login" element={<Login />} />
       </Route>
     </Routes>
   </BrowserRouter>
