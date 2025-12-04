@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { authApi } from "../../api/authApi";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [form, setForm] = useState({
     username: "",
@@ -24,17 +26,11 @@ export default function Login() {
     setMessage("");
 
     try {
-      const response = await authApi.login(form);
+      // Викликаємо login із AuthContext
+      await login(form);
 
-      const data = response.data; // AuthResponseDto
-
-      // Зберігаємо токен у localStorage (аналог Blazored.LocalStorage)
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("userId", data.userId);
-      localStorage.setItem("username", data.username);
-
-      // Перехід на профіль
-      navigate("/profile");
+      // Після оновлення стану — навігація
+      navigate("/profile", { replace: true });
     } catch (err) {
       setMessage("Невірне ім'я користувача або пароль");
     }
