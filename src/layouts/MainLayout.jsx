@@ -1,6 +1,9 @@
 import { Link, Outlet } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function MainLayout() {
+  const { user, isAuthenticated, logout } = useAuth();
+
   return (
     <>
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -19,17 +22,55 @@ export default function MainLayout() {
           </button>
 
           <div className="collapse navbar-collapse" id="mainNav">
-            <ul className="navbar-nav ms-auto">
+            <ul className="navbar-nav me-auto">
               <li className="nav-item">
                 <Link className="nav-link" to="/events">
-                  Events
+                  Події
                 </Link>
               </li>
+
               <li className="nav-item">
                 <Link className="nav-link" to="/posts">
-                  Posts
+                  Пости
                 </Link>
               </li>
+            </ul>
+
+            {/* Правий бік navbar */}
+            <ul className="navbar-nav ms-auto">
+              {!isAuthenticated ? (
+                <>
+                  <li className="nav-item">
+                    <Link className="btn btn-outline-light me-2" to="/login">
+                      Вхід
+                    </Link>
+                  </li>
+
+                  <li className="nav-item">
+                    <Link className="btn btn-primary" to="/register">
+                      Реєстрація
+                    </Link>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="nav-item d-flex align-items-center me-3 text-white">
+                    Привіт, <strong className="ms-1">{user.username}</strong>
+                  </li>
+
+                  <li className="nav-item">
+                    <Link className="btn btn-outline-light me-2" to="/profile">
+                      Мій профіль
+                    </Link>
+                  </li>
+
+                  <li className="nav-item">
+                    <button className="btn btn-danger" onClick={logout}>
+                      Вийти
+                    </button>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
         </div>
