@@ -36,10 +36,13 @@ export default function MyPosts({
             className="btn btn-sm btn-outline-secondary me-2"
             onClick={onToggle}
           >
-            {show ? "⬆ Сховати" : "⬇ Показати"}
+            {show ? "▲ Сховати" : "▼ Показати"}
           </button>
 
-          <button className="btn btn-success btn-sm" onClick={openCreatePost}>
+          <button
+            className="btn btn-outline-success btn-sm"
+            onClick={openCreatePost}
+          >
             Створити пост
           </button>
         </div>
@@ -72,7 +75,7 @@ export default function MyPosts({
             )}
 
             <div className="d-flex align-items-center flex-wrap mb-2">
-              <span className="me-3">👍 {post.likeCount}</span>
+              <span className="me-3">❤️ {post.likeCount}</span>
               <span className="me-3">💬 {post.commentCount}</span>
 
               <button

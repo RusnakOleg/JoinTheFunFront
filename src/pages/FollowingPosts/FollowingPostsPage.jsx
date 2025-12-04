@@ -10,6 +10,7 @@ export default function FollowingPostsPage() {
   const userId = user?.userId;
 
   const [posts, setPosts] = useState(null);
+  const [likedPosts, setLikedPosts] = useState(new Set()); // ← NEW
   const [comments, setComments] = useState({});
   const [newComments, setNewComments] = useState({});
   const [visibleComments, setVisibleComments] = useState(new Set());
@@ -24,6 +25,14 @@ export default function FollowingPostsPage() {
     const loadedPosts = res.data;
 
     setPosts(loadedPosts);
+
+    // ----- NEW: Заповнюємо Set лайків -----
+    const likesSet = new Set();
+    for (const p of loadedPosts) {
+      const liked = await likesApi.isLiked(p.postId, userId);
+      if (liked.data) likesSet.add(p.postId);
+    }
+    setLikedPosts(likesSet);
 
     const nc = {};
     loadedPosts.forEach((p) => {
@@ -45,13 +54,23 @@ export default function FollowingPostsPage() {
   // ---------------- LIKE ----------------
   async function toggleLike(postId) {
     const dto = { postId, userId };
+    const alreadyLiked = likedPosts.has(postId);
 
-    const liked = await likesApi.isLiked(postId, userId);
+    if (alreadyLiked) {
+      await likesApi.unlike(dto);
+    } else {
+      await likesApi.like(dto);
+    }
 
-    if (liked.data) await likesApi.unlike(dto);
-    else await likesApi.like(dto);
+    // ----- NEW: оновлення локального Set -----
+    setLikedPosts((prev) => {
+      const updated = new Set(prev);
+      if (alreadyLiked) updated.delete(postId);
+      else updated.add(postId);
+      return updated;
+    });
 
-    refreshPosts();
+    refreshPosts(); // оновлення лічильника
   }
 
   // ---------------- COMMENTS ----------------
@@ -110,9 +129,16 @@ export default function FollowingPostsPage() {
             posts.map((post) => (
               <div key={post.postId} className="card mb-4 shadow-sm">
                 <div className="card-body">
-                  <h6 className="card-subtitle mb-2 text-muted">
-                    {post.authorUsername}
-                  </h6>
+                  <div className="d-flex align-items-center mb-2">
+                    <img
+                      src={parseImage(post.imageUrl)}
+                      className="rounded-circle me-2"
+                      style={{ width: 40, height: 40, objectFit: "cover" }}
+                    />
+                    <h6 className="card-subtitle text-muted mb-0">
+                      {post.authorUsername}
+                    </h6>
+                  </div>
 
                   <p className="card-text">{post.content}</p>
 
@@ -127,14 +153,19 @@ export default function FollowingPostsPage() {
                   )}
 
                   <div className="d-flex align-items-center mb-2 flex-wrap">
-                    <span className="me-3">👍 {post.likeCount}</span>
+                    <span className="me-3">❤️ {post.likeCount}</span>
                     <span className="me-3">💬 {post.commentCount}</span>
 
+                    {/* ------ NEW: Динамічний стиль кнопки лайка ------ */}
                     <button
-                      className="btn btn-sm btn-outline-primary me-2"
+                      className={`btn btn-sm me-2 ${
+                        likedPosts.has(post.postId)
+                          ? "btn-primary"
+                          : "btn-outline-primary"
+                      }`}
                       onClick={() => toggleLike(post.postId)}
                     >
-                      Лайк
+                      {likedPosts.has(post.postId) ? " Лайк" : " Лайк"}
                     </button>
 
                     <button

@@ -12,8 +12,8 @@ import { participantsApi } from "../../api/participantsApi";
 import { useAuth } from "../../context/AuthContext";
 
 export default function UserProfilePage() {
-  const { userId: profileUserId } = useParams(); // id з URL
-  const { user } = useAuth(); // авторизований юзер
+  const { userId: profileUserId } = useParams();
+  const { user } = useAuth();
   const currentUserId = user?.userId;
 
   const [profile, setProfile] = useState(null);
@@ -25,6 +25,8 @@ export default function UserProfilePage() {
   const [comments, setComments] = useState({});
   const [visibleComments, setVisibleComments] = useState(new Set());
   const [newComments, setNewComments] = useState({});
+
+  const [likedPosts, setLikedPosts] = useState(new Set()); // ⭐ NEW
 
   const [showEvents, setShowEvents] = useState(true);
   const [showPosts, setShowPosts] = useState(true);
@@ -45,13 +47,20 @@ export default function UserProfilePage() {
       );
       setPosts(filteredPosts);
 
+      // ⭐ NEW — визначаємо які пости лайкнув юзер
+      const likesSet = new Set();
+      for (const p of filteredPosts) {
+        const liked = await likesApi.isLiked(p.postId, currentUserId);
+        if (liked.data) likesSet.add(p.postId);
+      }
+      setLikedPosts(likesSet);
+
       const eventsRes = await eventsApi.getAll();
       const filteredEvents = eventsRes.data.filter(
         (e) => e.creatorUsername === profileRes.data.username
       );
       setEvents(filteredEvents);
 
-      // new comments model for each post
       const nc = {};
       filteredPosts.forEach((p) => {
         nc[p.postId] = {
@@ -62,14 +71,12 @@ export default function UserProfilePage() {
       });
       setNewComments(nc);
 
-      // follow state
       const followRes = await followApi.isFollowing(
         currentUserId,
         profileUserId
       );
       setIsFollowing(followRes.data);
 
-      // events joined
       const joined = await participantsApi.getByUserId(currentUserId);
       setJoinedEventIds(new Set(joined.data.map((p) => p.eventId)));
     } catch (err) {
@@ -90,19 +97,31 @@ export default function UserProfilePage() {
   // ---------------- LIKE ----------------
   async function toggleLike(postId) {
     const dto = { postId, userId: currentUserId };
-    const liked = await likesApi.isLiked(postId, currentUserId);
+    const alreadyLiked = likedPosts.has(postId);
 
-    if (liked.data) await likesApi.unlike(dto);
-    else await likesApi.like(dto);
+    if (alreadyLiked) {
+      await likesApi.unlike(dto);
+    } else {
+      await likesApi.like(dto);
+    }
+
+    // ⭐ NEW — оновлюємо локальний список лайків
+    setLikedPosts((prev) => {
+      const updated = new Set(prev);
+      if (alreadyLiked) updated.delete(postId);
+      else updated.add(postId);
+      return updated;
+    });
 
     refreshPosts();
   }
 
   async function refreshPosts() {
     const postsRes = await postsApi.getAll();
-    setPosts(
-      postsRes.data.filter((p) => p.authorUsername === profile.username)
+    const filtered = postsRes.data.filter(
+      (p) => p.authorUsername === profile.username
     );
+    setPosts(filtered);
   }
 
   // ---------------- COMMENTS ----------------
@@ -140,7 +159,7 @@ export default function UserProfilePage() {
     refreshPosts();
   }
 
-  // ---------------- JOIN EVENT ----------------
+  // ---------------- EVENT JOIN ----------------
   async function joinEvent(eventId) {
     await participantsApi.add({
       eventId,
@@ -215,51 +234,6 @@ export default function UserProfilePage() {
 
         {/* RIGHT COLUMN */}
         <div className="col-md-8">
-          {/* EVENTS */}
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5 className="fw-semibold">Події користувача</h5>
-            <button
-              className="btn btn-sm btn-outline-secondary"
-              onClick={() => setShowEvents(!showEvents)}
-            >
-              {showEvents ? "⬆ Сховати" : "⬇ Показати"}
-            </button>
-          </div>
-
-          {showEvents &&
-            (events.length === 0 ? (
-              <p className="text-muted">Подій немає.</p>
-            ) : (
-              events.map((ev) => (
-                <div key={ev.eventId} className="card mb-3 shadow-sm">
-                  <div className="card-body">
-                    <h6>{ev.title}</h6>
-                    <p>
-                      {ev.location} —{" "}
-                      {new Date(ev.startTime).toLocaleDateString()}
-                    </p>
-                    <p>Учасників: {ev.participantCount}</p>
-
-                    {joinedEventIds.has(ev.eventId) ? (
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => leaveEvent(ev.eventId)}
-                      >
-                        Вийти
-                      </button>
-                    ) : (
-                      <button
-                        className="btn btn-sm btn-success"
-                        onClick={() => joinEvent(ev.eventId)}
-                      >
-                        Долучитись
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            ))}
-
           {/* POSTS */}
           <div className="d-flex justify-content-between align-items-center mt-4 mb-3">
             <h5 className="fw-semibold">Пости користувача</h5>
@@ -267,7 +241,7 @@ export default function UserProfilePage() {
               className="btn btn-sm btn-outline-secondary"
               onClick={() => setShowPosts(!showPosts)}
             >
-              {showPosts ? "⬆ Сховати" : "⬇ Показати"}
+              {showPosts ? "▲ Сховати" : "▼ Показати"}
             </button>
           </div>
 
@@ -291,14 +265,19 @@ export default function UserProfilePage() {
                   )}
 
                   <div className="d-flex align-items-center mb-2">
-                    <span className="me-3">👍 {post.likeCount}</span>
+                    <span className="me-3">❤️ {post.likeCount}</span>
                     <span className="me-3">💬 {post.commentCount}</span>
 
+                    {/*  UPDATED LIKE BUTTON */}
                     <button
-                      className="btn btn-sm btn-outline-primary me-2"
+                      className={`btn btn-sm me-2 ${
+                        likedPosts.has(post.postId)
+                          ? "btn-primary"
+                          : "btn-outline-primary"
+                      }`}
                       onClick={() => toggleLike(post.postId)}
                     >
-                      Лайк
+                      {likedPosts.has(post.postId) ? "Лайк" : "Лайк"}
                     </button>
 
                     <button

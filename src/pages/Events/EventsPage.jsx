@@ -101,7 +101,7 @@ export default function EventsPage() {
               className="btn btn-outline-success"
               onClick={() => navigate("/create-event")}
             >
-              ➕ Створити подію
+              Створити подію
             </button>
           </div>
 

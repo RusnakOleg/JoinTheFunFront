@@ -11,12 +11,12 @@ export default function MyEvents({ events, show, onToggle, deleteEvent }) {
             className="btn btn-sm btn-outline-secondary me-2"
             onClick={onToggle}
           >
-            {show ? "⬆ Сховати" : "⬇ Показати"}
+            {show ? "▲ Сховати" : "▼ Показати"}
           </button>
 
           {/* НОВА КНОПКА */}
           <Link to="/create-event" className="btn btn-outline-success btn-sm">
-            ➕ Створити подію
+            Створити подію
           </Link>
         </div>
       </div>
