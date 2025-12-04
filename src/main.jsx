@@ -29,10 +29,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="about" element={<About />} />
           <Route path="register" element={<Register />} />
           <Route path="login" element={<Login />} />
-          <Route path="friends" element={<FriendsPage />} />
-          <Route path="/user-profile/:userId" element={<UserProfilePage />} />
-          <Route path="/posts" element={<FollowingPostsPage />} />
-          <Route path="/events" element={<EventsPage />} />
+          {/* <Route path="/user-profile/:userId" element={<UserProfilePage />} /> */}
 
           {/* Захищені сторінки */}
           <Route
@@ -48,6 +45,38 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             element={
               <ProtectedRoute>
                 <CreateEventPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/events"
+            element={
+              <ProtectedRoute>
+                <EventsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/posts"
+            element={
+              <ProtectedRoute>
+                <FollowingPostsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/friends"
+            element={
+              <ProtectedRoute>
+                <FriendsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user-profile/:userId"
+            element={
+              <ProtectedRoute>
+                <UserProfilePage />
               </ProtectedRoute>
             }
           />
