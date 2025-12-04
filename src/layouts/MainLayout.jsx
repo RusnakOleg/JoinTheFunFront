@@ -23,23 +23,28 @@ export default function MainLayout() {
 
           <div className="collapse navbar-collapse" id="mainNav">
             <ul className="navbar-nav me-auto">
-              <li className="nav-item">
-                <Link className="nav-link" to="/events">
-                  Події
-                </Link>
-              </li>
+              {/* Pages only for authenticated users */}
+              {isAuthenticated && (
+                <>
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/events">
+                      Події
+                    </Link>
+                  </li>
 
-              <li className="nav-item">
-                <Link className="nav-link" to="/posts">
-                  Пости
-                </Link>
-              </li>
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/posts">
+                      Пости
+                    </Link>
+                  </li>
 
-              <li className="nav-item">
-                <Link className="nav-link" to="/friends">
-                  Друзі
-                </Link>
-              </li>
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/friends">
+                      Друзі
+                    </Link>
+                  </li>
+                </>
+              )}
             </ul>
 
             {/* Правий бік navbar */}
