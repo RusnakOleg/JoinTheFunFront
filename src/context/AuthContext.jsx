@@ -48,10 +48,10 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("username");
 
     setUser(null);
-    setIsAuthenticated(false);
+    //setIsAuthenticated(false);
 
     //  РЕДІРЕКТ НА ЛОГІН
-    navigate("/login");
+    //navigate("/login");
   };
 
   return (

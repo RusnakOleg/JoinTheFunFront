@@ -51,7 +51,7 @@ export default function MainLayout() {
             <ul className="navbar-nav ms-auto">
               {!isAuthenticated ? (
                 <>
-                  <li className="nav-item">
+                  {/* <li className="nav-item">
                     <Link className="btn btn-outline-light me-2" to="/login">
                       Вхід
                     </Link>
@@ -61,7 +61,7 @@ export default function MainLayout() {
                     <Link className="btn btn-primary" to="/register">
                       Реєстрація
                     </Link>
-                  </li>
+                  </li> */}
                 </>
               ) : (
                 <>
