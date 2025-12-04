@@ -13,6 +13,7 @@ export default function Login() {
   });
 
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setForm({
@@ -26,10 +27,7 @@ export default function Login() {
     setMessage("");
 
     try {
-      // Викликаємо login із AuthContext
       await login(form);
-
-      // Після оновлення стану — навігація
       navigate("/profile", { replace: true });
     } catch (err) {
       setMessage("Невірне ім'я користувача або пароль");
@@ -59,9 +57,9 @@ export default function Login() {
             <label htmlFor="username">Ім'я користувача</label>
           </div>
 
-          <div className="form-floating mb-3">
+          <div className="form-floating mb-3 position-relative">
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               id="password"
               className="form-control"
@@ -71,6 +69,16 @@ export default function Login() {
               required
             />
             <label htmlFor="password">Пароль</label>
+
+            {/* Кнопка перемикання */}
+            <button
+              type="button"
+              className="btn btn-outline-secondary position-absolute top-50 end-0 translate-middle-y me-2"
+              style={{ border: "none" }}
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? "👁️" : "🙈"}
+            </button>
           </div>
 
           <button className="btn btn-primary w-100 py-2">Увійти</button>

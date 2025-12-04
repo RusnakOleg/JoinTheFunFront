@@ -12,6 +12,7 @@ export default function Register() {
   });
 
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setForm({
@@ -28,7 +29,7 @@ export default function Register() {
       const response = await authApi.register(form);
       console.log(response.data);
 
-      navigate("/login"); // редірект як у Blazor
+      navigate("/login");
     } catch (error) {
       setMessage("Не вдалося зареєструватися");
     }
@@ -71,9 +72,9 @@ export default function Register() {
             <label htmlFor="username">Ім'я користувача</label>
           </div>
 
-          <div className="form-floating mb-3">
+          <div className="form-floating mb-3 position-relative">
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               id="password"
               className="form-control"
@@ -83,6 +84,15 @@ export default function Register() {
               required
             />
             <label htmlFor="password">Пароль</label>
+
+            <button
+              type="button"
+              className="btn btn-outline-secondary position-absolute top-50 end-0 translate-middle-y me-2"
+              style={{ border: "none" }}
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? "👁️" : "🙈"}
+            </button>
           </div>
 
           <button className="btn btn-primary w-100 py-2 mb-3" type="submit">
