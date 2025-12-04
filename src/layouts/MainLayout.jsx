@@ -34,6 +34,12 @@ export default function MainLayout() {
                   Пости
                 </Link>
               </li>
+
+              <li className="nav-item">
+                <Link className="nav-link" to="/friends">
+                  Друзі
+                </Link>
+              </li>
             </ul>
 
             {/* Правий бік navbar */}
