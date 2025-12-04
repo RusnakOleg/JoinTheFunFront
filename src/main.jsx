@@ -15,6 +15,7 @@ import { AuthProvider } from "./context/AuthContext";
 import CreateEventPage from "./pages/Events/CreateEventPage";
 import FriendsPage from "./pages/Friends/FriendsPage";
 import UserProfilePage from "./pages/UserProfile/UserProfilePage";
+import FollowingPostsPage from "./pages/FollowingPosts/FollowingPostsPage";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -31,6 +32,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="login" element={<Login />} />
           <Route path="friends" element={<FriendsPage />} />
           <Route path="/user-profile/:userId" element={<UserProfilePage />} />
+          <Route path="/posts" element={<FollowingPostsPage />} />
 
           {/* Захищені сторінки */}
           <Route
