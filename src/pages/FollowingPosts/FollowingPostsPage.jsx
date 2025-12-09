@@ -96,17 +96,28 @@ export default function FollowingPostsPage() {
     const dto = newComments[postId];
     if (!dto.content.trim()) return;
 
-    await commentsApi.create(dto);
+    try {
+      await commentsApi.create(dto);
 
-    setNewComments((prev) => ({
-      ...prev,
-      [postId]: { ...prev[postId], content: "" },
-    }));
+      // Успіх: очищаємо інпут
+      setNewComments((prev) => ({
+        ...prev,
+        [postId]: { ...prev[postId], content: "" },
+      }));
 
-    const updated = await commentsApi.getByPostId(postId);
-    setComments((prev) => ({ ...prev, [postId]: updated.data }));
-
-    refreshPosts();
+      // Оновлюємо коментарі
+      const updated = await commentsApi.getByPostId(postId);
+      setComments((prev) => ({ ...prev, [postId]: updated.data }));
+      refreshPosts();
+    } catch (error) {
+      //  Тут ми ловимо 400 BadRequest
+      if (error.response && error.response.status === 400) {
+        alert(error.response.data.message);
+        // або toast/error UI
+      } else {
+        console.error("Unexpected error:", error);
+      }
+    }
   }
 
   const parseImage = (base64) =>
@@ -130,11 +141,11 @@ export default function FollowingPostsPage() {
               <div key={post.postId} className="card mb-4 shadow-sm">
                 <div className="card-body">
                   <div className="d-flex align-items-center mb-2">
-                    <img
+                    {/* <img
                       src={parseImage(post.imageUrl)}
                       className="rounded-circle me-2"
                       style={{ width: 40, height: 40, objectFit: "cover" }}
-                    />
+                    /> */}
                     <h6 className="card-subtitle text-muted mb-0">
                       {post.authorUsername}
                     </h6>
