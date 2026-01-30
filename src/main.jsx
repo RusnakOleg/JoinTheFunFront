@@ -15,6 +15,7 @@ import FriendsPage from "./pages/Friends/FriendsPage";
 import UserProfilePage from "./pages/UserProfile/UserProfilePage";
 import FollowingPostsPage from "./pages/FollowingPosts/FollowingPostsPage";
 import EventsPage from "./pages/Events/EventsPage";
+import "./index.css";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -83,5 +84,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         </Route>
       </Routes>
     </BrowserRouter>
-  </AuthProvider>
+  </AuthProvider>,
 );
