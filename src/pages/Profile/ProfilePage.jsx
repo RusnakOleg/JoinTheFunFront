@@ -20,17 +20,15 @@ export default function ProfilePage() {
 
   const [profile, setProfile] = useState(null);
   const [editModel, setEditModel] = useState(null);
-
   const [allInterests, setAllInterests] = useState([]);
-
   const [userEvents, setUserEvents] = useState([]);
   const [posts, setPosts] = useState([]);
 
+  // Керування табами: "posts" (за замовчуванням) або "events"
+  const [activeTab, setActiveTab] = useState("posts");
+
   const [comments, setComments] = useState({});
   const [visibleComments, setVisibleComments] = useState(new Set());
-
-  const [showEvents, setShowEvents] = useState(true);
-  const [showPosts, setShowPosts] = useState(true);
   const [showPostModal, setShowPostModal] = useState(false);
 
   const [newPost, setNewPost] = useState({
@@ -39,9 +37,6 @@ export default function ProfilePage() {
     userId,
   });
 
-  // --------------------------
-  // INITIAL LOAD
-  // --------------------------
   useEffect(() => {
     loadData();
   }, []);
@@ -54,16 +49,16 @@ export default function ProfilePage() {
     setAllInterests(interests.data);
 
     const allPosts = await postsApi.getAll();
-    const filtered = allPosts.data.filter(
-      (x) => x.authorUsername === p.data.username
+    const filteredPosts = allPosts.data.filter(
+      (x) => x.authorUsername === p.data.username,
     );
-    setPosts(filtered);
+    setPosts(filteredPosts);
 
-    const events = await eventsApi.getAll();
-    const mine = events.data.filter(
-      (x) => x.creatorUsername === p.data.username
+    const allEvents = await eventsApi.getAll();
+    const mineEvents = allEvents.data.filter(
+      (x) => x.creatorUsername === p.data.username,
     );
-    setUserEvents(mine);
+    setUserEvents(mineEvents);
 
     setEditModel({
       city: p.data.city,
@@ -77,101 +72,64 @@ export default function ProfilePage() {
     });
   }
 
-  // --------------------------
-  // POST CREATION
-  // --------------------------
-  async function createPost() {
-    await postsApi.create(newPost);
-    setShowPostModal(false);
-    await refreshPosts();
-  }
-
   async function refreshPosts() {
     const allPosts = await postsApi.getAll();
     const filtered = allPosts.data.filter(
-      (x) => x.authorUsername === profile.username
+      (x) => x.authorUsername === profile.username,
     );
     setPosts(filtered);
   }
 
-  // --------------------------
-  // LIKE TOGGLE
-  // --------------------------
-  async function toggleLike(postId) {
-    const dto = { postId, userId };
-
-    const likedResp = await likesApi.isLiked(postId, userId);
-    const isLiked = likedResp.data;
-
-    if (isLiked) await likesApi.unlike(dto);
-    else await likesApi.like(dto);
-
+  async function createPost() {
+    await postsApi.create(newPost);
+    setShowPostModal(false);
+    setNewPost({ content: "", imageUrl: "", userId });
     await refreshPosts();
   }
 
-  // --------------------------
-  // COMMENTS
-  // --------------------------
+  async function toggleLike(postId) {
+    const likedResp = await likesApi.isLiked(postId, userId);
+    if (likedResp.data) await likesApi.unlike({ postId, userId });
+    else await likesApi.like({ postId, userId });
+    await refreshPosts();
+  }
+
   async function toggleComments(postId) {
     const newSet = new Set(visibleComments);
-
     if (newSet.has(postId)) {
       newSet.delete(postId);
     } else {
       newSet.add(postId);
-
       if (!comments[postId]) {
         const resp = await commentsApi.getByPostId(postId);
-        setComments((prev) => ({
-          ...prev,
-          [postId]: resp.data,
-        }));
+        setComments((prev) => ({ ...prev, [postId]: resp.data }));
       }
     }
-
     setVisibleComments(newSet);
   }
 
   async function submitComment(postId, text) {
-    const dto = {
-      postId,
-      userId,
-      content: text,
-    };
-
-    await commentsApi.create(dto);
-
+    await commentsApi.create({ postId, userId, content: text });
     const refreshed = await commentsApi.getByPostId(postId);
-    setComments((prev) => ({
-      ...prev,
-      [postId]: refreshed.data,
-    }));
-
+    setComments((prev) => ({ ...prev, [postId]: refreshed.data }));
     await refreshPosts();
   }
 
-  // --------------------------
-  // DELETE EVENT
-  // --------------------------
   async function deleteEvent(eventId) {
     await eventsApi.delete(eventId);
     const all = await eventsApi.getAll();
     setUserEvents(
-      all.data.filter((x) => x.creatorUsername === profile.username)
+      all.data.filter((x) => x.creatorUsername === profile.username),
     );
   }
 
-  // --------------------------
-  // DELETE POST
-  // --------------------------
   async function deletePost(postId) {
-    await postsApi.delete(postId);
-    await refreshPosts();
+    if (window.confirm("Видалити цей пост?")) {
+      await postsApi.delete(postId);
+      await refreshPosts();
+    }
   }
 
-  // --------------------------
-  // UPDATE PROFILE
-  // --------------------------
   async function updateProfile(data) {
     await profileApi.update(userId, data);
     await loadData();
@@ -179,53 +137,90 @@ export default function ProfilePage() {
 
   if (!profile || !editModel) {
     return (
-      <div className="text-center mt-5">
-        <em>Завантаження...</em>
+      <div className="min-h-screen flex items-center justify-center bg-[#f8f9fd]">
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="container mt-4">
-      <h3 className="fw-bold text-center mb-4">Мій профіль</h3>
-
-      <div className="row gx-4 gy-4">
-        {/* LEFT COLUMN */}
-        <div className="col-lg-4">
-          <div
-            style={{ maxHeight: "130vh", overflowY: "auto", paddingRight: 4 }}
-          >
-            <ProfileInfo profile={profile} />
-            <ProfileEditForm
-              editModel={editModel}
-              setEditModel={setEditModel}
-              allInterests={allInterests}
-              updateProfile={updateProfile}
-            />
-          </div>
+    <div className="min-h-screen bg-[#f8f9fd] py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Заголовок сторінки */}
+        <div className="mb-8 text-center sm:text-left">
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+            Мій кабінет
+          </h1>
+          <p className="text-gray-500 font-medium">
+            Керуйте своїм профілем та публікаціями
+          </p>
         </div>
 
-        {/* RIGHT COLUMN */}
-        <div className="col-lg-8">
-          <MyEvents
-            events={userEvents}
-            onToggle={() => setShowEvents(!showEvents)}
-            show={showEvents}
-            deleteEvent={deleteEvent}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* ЛІВА КОЛОНКА (без змін) */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="lg:sticky lg:top-8 max-h-[calc(100vh-4rem)] overflow-y-auto pr-2 custom-scrollbar">
+              <ProfileInfo profile={profile} />
+              <ProfileEditForm
+                editModel={editModel}
+                setEditModel={setEditModel}
+                allInterests={allInterests}
+                updateProfile={updateProfile}
+              />
+            </div>
+          </div>
 
-          <MyPosts
-            posts={posts}
-            comments={comments}
-            visibleComments={visibleComments}
-            toggleComments={toggleComments}
-            submitComment={submitComment}
-            toggleLike={toggleLike}
-            deletePost={deletePost}
-            openCreatePost={() => setShowPostModal(true)}
-            show={showPosts}
-            onToggle={() => setShowPosts(!showPosts)}
-          />
+          {/* ПРАВА КОЛОНКА: Таби та Контент */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* ПАНЕЛЬ ТАБІВ */}
+            <div className="bg-white p-2 rounded-[2rem] shadow-sm border border-gray-100 flex gap-2">
+              <button
+                onClick={() => setActiveTab("posts")}
+                className={`flex-1 py-4 rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${
+                  activeTab === "posts"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
+                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                ПОСТИ ({posts.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("events")}
+                className={`flex-1 py-4 rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${
+                  activeTab === "events"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
+                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                ПОДІЇ ({userEvents.length})
+              </button>
+            </div>
+
+            {/* КОНТЕНТ ОБРАНОГО ТАБА */}
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {activeTab === "posts" ? (
+                <MyPosts
+                  posts={posts}
+                  comments={comments}
+                  visibleComments={visibleComments}
+                  toggleComments={toggleComments}
+                  submitComment={submitComment}
+                  toggleLike={toggleLike}
+                  deletePost={deletePost}
+                  openCreatePost={() => setShowPostModal(true)}
+                  show={true}
+                  onToggle={() => {}}
+                />
+              ) : (
+                <MyEvents
+                  events={userEvents}
+                  show={true}
+                  onToggle={() => {}}
+                  deleteEvent={deleteEvent}
+                />
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

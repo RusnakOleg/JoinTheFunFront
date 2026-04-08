@@ -10,232 +10,254 @@ export default function FollowingPostsPage() {
   const userId = user?.userId;
 
   const [posts, setPosts] = useState(null);
-  const [likedPosts, setLikedPosts] = useState(new Set()); // ← NEW
+  const [likedPosts, setLikedPosts] = useState(new Set());
   const [comments, setComments] = useState({});
-  const [newComments, setNewComments] = useState({});
+  const [commentInputs, setCommentInputs] = useState({});
   const [visibleComments, setVisibleComments] = useState(new Set());
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userId) return;
-    loadPosts();
+    if (userId) loadPosts();
   }, [userId]);
 
   async function loadPosts() {
-    const res = await postsApi.getFollowing(userId);
-    const loadedPosts = res.data;
+    setLoading(true);
+    try {
+      const res = await postsApi.getFollowing(userId);
+      const loadedPosts = res.data;
+      setPosts(loadedPosts);
 
-    setPosts(loadedPosts);
-
-    // ----- NEW: Заповнюємо Set лайків -----
-    const likesSet = new Set();
-    for (const p of loadedPosts) {
-      const liked = await likesApi.isLiked(p.postId, userId);
-      if (liked.data) likesSet.add(p.postId);
+      // Отримуємо лайки паралельно для швидкості
+      const likesSet = new Set();
+      await Promise.all(
+        loadedPosts.map(async (p) => {
+          const liked = await likesApi.isLiked(p.postId, userId);
+          if (liked.data) likesSet.add(p.postId);
+        }),
+      );
+      setLikedPosts(likesSet);
+    } catch (err) {
+      console.error("Error loading posts:", err);
+    } finally {
+      setLoading(false);
     }
-    setLikedPosts(likesSet);
-
-    const nc = {};
-    loadedPosts.forEach((p) => {
-      nc[p.postId] = {
-        postId: p.postId,
-        userId: userId,
-        content: "",
-      };
-    });
-
-    setNewComments(nc);
   }
 
-  async function refreshPosts() {
-    const res = await postsApi.getFollowing(userId);
-    setPosts(res.data);
-  }
-
-  // ---------------- LIKE ----------------
+  // --- LIKE LOGIC ---
   async function toggleLike(postId) {
-    const dto = { postId, userId };
     const alreadyLiked = likedPosts.has(postId);
+    const dto = { postId, userId };
 
-    if (alreadyLiked) {
-      await likesApi.unlike(dto);
-    } else {
-      await likesApi.like(dto);
-    }
-
-    // ----- NEW: оновлення локального Set -----
+    // Оновлюємо UI миттєво (Optimistic Update)
     setLikedPosts((prev) => {
-      const updated = new Set(prev);
-      if (alreadyLiked) updated.delete(postId);
-      else updated.add(postId);
-      return updated;
+      const next = new Set(prev);
+      alreadyLiked ? next.delete(postId) : next.add(postId);
+      return next;
     });
 
-    refreshPosts(); // оновлення лічильника
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.postId === postId
+          ? {
+              ...p,
+              likeCount: alreadyLiked ? p.likeCount - 1 : p.likeCount + 1,
+            }
+          : p,
+      ),
+    );
+
+    try {
+      alreadyLiked ? await likesApi.unlike(dto) : await likesApi.like(dto);
+    } catch (err) {
+      console.error("Like error", err);
+      // Якщо помилка — повертаємо назад (можна додати логіку rollback)
+    }
   }
 
-  // ---------------- COMMENTS ----------------
+  // --- COMMENTS LOGIC ---
   async function toggleComments(postId) {
-    const newSet = new Set(visibleComments);
+    const key = `post_${postId}`;
+    const newVisible = new Set(visibleComments);
 
-    if (newSet.has(postId)) {
-      newSet.delete(postId);
-      setVisibleComments(newSet);
-      return;
+    if (newVisible.has(key)) {
+      newVisible.delete(key);
+    } else {
+      newVisible.add(key);
+      if (!comments[key]) {
+        const res = await commentsApi.getByPostId(postId);
+        setComments((prev) => ({ ...prev, [key]: res.data }));
+      }
     }
-
-    newSet.add(postId);
-    setVisibleComments(newSet);
-
-    if (!comments[postId]) {
-      const res = await commentsApi.getByPostId(postId);
-      setComments((prev) => ({ ...prev, [postId]: res.data }));
-    }
+    setVisibleComments(newVisible);
   }
 
-  async function submitComment(postId) {
-    const dto = newComments[postId];
-    if (!dto.content.trim()) return;
+  async function handleAddComment(postId) {
+    const key = `post_${postId}`;
+    const text = commentInputs[key];
+    if (!text?.trim()) return;
+
+    const dto = { postId, userId, content: text };
 
     try {
       await commentsApi.create(dto);
+      setCommentInputs((prev) => ({ ...prev, [key]: "" }));
 
-      // Успіх: очищаємо інпут
-      setNewComments((prev) => ({
-        ...prev,
-        [postId]: { ...prev[postId], content: "" },
-      }));
+      // Оновлюємо список коментарів
+      const res = await commentsApi.getByPostId(postId);
+      setComments((prev) => ({ ...prev, [key]: res.data }));
 
-      // Оновлюємо коментарі
-      const updated = await commentsApi.getByPostId(postId);
-      setComments((prev) => ({ ...prev, [postId]: updated.data }));
-      refreshPosts();
+      // Оновлюємо лічильник у пості
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.postId === postId ? { ...p, commentCount: p.commentCount + 1 } : p,
+        ),
+      );
     } catch (error) {
-      //  Тут ми ловимо 400 BadRequest
-      if (error.response && error.response.status === 400) {
-        alert(error.response.data.message);
-        // або toast/error UI
-      } else {
-        console.error("Unexpected error:", error);
-      }
+      alert(error.response?.data?.message || "Помилка при додаванні коментаря");
     }
   }
 
   const parseImage = (base64) =>
-    base64 ? `data:image/jpeg;base64,${base64}` : "";
+    base64 ? `data:image/jpeg;base64,${base64}` : null;
 
-  // ---------------- RENDER ----------------
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FD]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+
   return (
-    <div className="container mt-4">
-      <h3 className="mb-4 fw-bold text-center">Пости</h3>
+    <div className="min-h-screen bg-[#F8F9FD] py-10 px-4">
+      <div className="max-w-3xl mx-auto">
+        <h3 className="text-3xl font-black text-gray-900 mb-8 text-center uppercase tracking-tighter">
+          Стрічка <span className="text-blue-600">підписок</span>
+        </h3>
 
-      <div className="d-flex justify-content-center">
-        <div style={{ width: "100%", maxWidth: "700px" }}>
-          {!posts ? (
-            <div className="text-center text-muted">Завантаження...</div>
-          ) : posts.length === 0 ? (
-            <div className="text-center text-muted">
-              <em>Постів не знайдено.</em>
+        <div className="space-y-8">
+          {posts?.length === 0 ? (
+            <div className="text-center py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-gray-200 text-gray-400 font-bold">
+              Тут поки порожньо. Підпишіться на когось! ✨
             </div>
           ) : (
-            posts.map((post) => (
-              <div key={post.postId} className="card mb-4 shadow-sm">
-                <div className="card-body">
-                  <div className="d-flex align-items-center mb-2">
-                    {/* <img
-                      src={parseImage(post.imageUrl)}
-                      className="rounded-circle me-2"
-                      style={{ width: 40, height: 40, objectFit: "cover" }}
-                    /> */}
-                    <h6 className="card-subtitle text-muted mb-0">
-                      {post.authorUsername}
-                    </h6>
-                  </div>
+            posts?.map((post) => {
+              const key = `post_${post.postId}`;
+              const isVisible = visibleComments.has(key);
 
-                  <p className="card-text">{post.content}</p>
-
-                  {post.imageUrl && (
-                    <div className="text-center mb-3">
-                      <img
-                        src={parseImage(post.imageUrl)}
-                        className="img-fluid rounded"
-                        style={{ maxWidth: "500px" }}
-                      />
-                    </div>
-                  )}
-
-                  <div className="d-flex align-items-center mb-2 flex-wrap">
-                    <span className="me-3">❤️ {post.likeCount}</span>
-                    <span className="me-3">💬 {post.commentCount}</span>
-
-                    {/* ------ NEW: Динамічний стиль кнопки лайка ------ */}
-                    <button
-                      className={`btn btn-sm me-2 ${
-                        likedPosts.has(post.postId)
-                          ? "btn-primary"
-                          : "btn-outline-primary"
-                      }`}
-                      onClick={() => toggleLike(post.postId)}
-                    >
-                      {likedPosts.has(post.postId) ? " Лайк" : " Лайк"}
-                    </button>
-
-                    <button
-                      className="btn btn-sm btn-outline-secondary"
-                      onClick={() => toggleComments(post.postId)}
-                    >
-                      {visibleComments.has(post.postId)
-                        ? "Сховати коментарі"
-                        : "Показати коментарі"}
-                    </button>
-                  </div>
-
-                  {/* COMMENTS */}
-                  {visibleComments.has(post.postId) && (
-                    <div className="mt-3">
-                      {comments[post.postId] ? (
-                        <div className="list-group mb-3">
-                          {comments[post.postId].map((c, i) => (
-                            <div key={i} className="list-group-item">
-                              <strong>{c.authorUsername}: </strong>
-                              {c.content}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-muted">
-                          <em>Завантаження коментарів...</em>
-                        </div>
-                      )}
-
-                      {/* NEW COMMENT FORM */}
-                      <div className="input-group">
-                        <input
-                          type="text"
-                          className="form-control"
-                          value={newComments[post.postId]?.content || ""}
-                          onChange={(e) =>
-                            setNewComments((prev) => ({
-                              ...prev,
-                              [post.postId]: {
-                                ...prev[post.postId],
-                                content: e.target.value,
-                              },
-                            }))
-                          }
-                          placeholder="Ваш коментар..."
-                        />
-                        <button
-                          className="btn btn-success"
-                          onClick={() => submitComment(post.postId)}
-                        >
-                          Надіслати
-                        </button>
+              return (
+                <article
+                  key={post.postId}
+                  className="bg-white rounded-[2.5rem] shadow-xl shadow-blue-900/5 border border-gray-100 overflow-hidden transition-all hover:shadow-2xl hover:shadow-blue-900/10"
+                >
+                  <div className="p-8">
+                    {/* Header */}
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center font-black text-blue-600 uppercase">
+                        {post.authorUsername.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-black text-gray-900 text-sm leading-none">
+                          {post.authorUsername}
+                        </p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+                          Нещодавно
+                        </p>
                       </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            ))
+
+                    {/* Content */}
+                    <p className="text-gray-700 leading-relaxed mb-6 font-medium text-lg">
+                      {post.content}
+                    </p>
+
+                    {/* Image */}
+                    {post.imageUrl && (
+                      <div className="rounded-[2rem] overflow-hidden mb-6 shadow-inner border border-gray-50">
+                        <img
+                          src={parseImage(post.imageUrl)}
+                          className="w-full object-cover max-h-[500px]"
+                          alt="Post content"
+                        />
+                      </div>
+                    )}
+
+                    {/* Interactions */}
+                    <div className="flex items-center gap-4 pt-6 border-t border-gray-50">
+                      <button
+                        onClick={() => toggleLike(post.postId)}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl transition-all font-black text-xs active:scale-90 ${
+                          likedPosts.has(post.postId)
+                            ? "bg-red-50 text-red-500 shadow-sm"
+                            : "bg-gray-50 text-gray-400 hover:bg-gray-100"
+                        }`}
+                      >
+                        {likedPosts.has(post.postId) ? "❤️" : "🤍"}{" "}
+                        {post.likeCount}
+                      </button>
+
+                      <button
+                        onClick={() => toggleComments(post.postId)}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-xs transition-all active:scale-90 ${
+                          isVisible
+                            ? "bg-blue-50 text-blue-600"
+                            : "bg-gray-50 text-gray-400 hover:bg-gray-100"
+                        }`}
+                      >
+                        💬 {post.commentCount} коментарів
+                      </button>
+                    </div>
+
+                    {/* Comments Section */}
+                    {isVisible && (
+                      <div className="mt-6 pt-6 border-t border-gray-50 space-y-4 animate-in fade-in slide-in-from-top-2">
+                        <div className="max-h-60 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                          {comments[key]?.map((c, i) => (
+                            <div
+                              key={i}
+                              className="bg-gray-50 p-4 rounded-2xl border border-gray-100/50"
+                            >
+                              <span className="font-black text-[10px] text-blue-600 uppercase block mb-1">
+                                {c.authorUsername}
+                              </span>
+                              <p className="text-sm text-gray-600 font-medium">
+                                {c.content}
+                              </p>
+                            </div>
+                          ))}
+                          {(!comments[key] || comments[key].length === 0) && (
+                            <p className="text-center text-xs text-gray-400 py-4">
+                              Будьте першим, хто прокоментує!
+                            </p>
+                          )}
+                        </div>
+
+                        {/* New Comment Input */}
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            className="flex-1 bg-gray-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 font-medium transition-all"
+                            placeholder="Напишіть щось цікаве..."
+                            value={commentInputs[key] || ""}
+                            onChange={(e) =>
+                              setCommentInputs((prev) => ({
+                                ...prev,
+                                [key]: e.target.value,
+                              }))
+                            }
+                          />
+                          <button
+                            onClick={() => handleAddComment(post.postId)}
+                            className="bg-blue-600 text-white px-5 rounded-xl hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-200"
+                          >
+                            🚀
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </article>
+              );
+            })
           )}
         </div>
       </div>
