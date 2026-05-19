@@ -1,82 +1,125 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { profileApi } from "../../api/profileApi";
 import { interestsApi } from "../../api/interestsApi";
 import { Link } from "react-router-dom";
 
+//  хук для затримки оновлення тексту (Debounce)
+function useDebounce(value, delay = 300) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+// Виносимо функцію за межі компонента, щоб вона не перестворювалася в пам'яті
+const parseImg = (b64) => {
+  return b64 ? `data:image/jpeg;base64,${b64}` : "https://via.placeholder.com/150";
+};
+
 export default function FriendsPage() {
+  // Стани для контрольованих інпутів (миттєве відображення тексту на екрані)
+  const [searchUsername, setSearchUsername] = useState("");
   const [searchCity, setSearchCity] = useState("");
   const [selectedInterestId, setSelectedInterestId] = useState(0);
-  const [profiles, setProfiles] = useState(null);
+
+  // Дебаунс-значення для текстових полів 
+  const debouncedUsername = useDebounce(searchUsername, 300);
+  const debouncedCity = useDebounce(searchCity, 300);
+  
+  const [allProfiles, setAllProfiles] = useState(null);
   const [interests, setInterests] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    async function loadInitialData() {
+      try {
+        setLoading(true);
+        const [interestsResp, profilesResp] = await Promise.all([
+          interestsApi.getAll(),
+          profileApi.getAll(),
+        ]);
+        setInterests(interestsResp.data);
+        setAllProfiles(profilesResp.data);
+      } catch (err) {
+        console.error("Помилка завантаження даних:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
     loadInitialData();
   }, []);
 
-  async function loadInitialData() {
-    try {
-      setLoading(true);
-      const [interestsResp, profilesResp] = await Promise.all([
-        interestsApi.getAll(),
-        profileApi.getAll(),
-      ]);
-      setInterests(interestsResp.data);
-      setProfiles(profilesResp.data);
-    } catch (err) {
-      console.error("Помилка завантаження даних:", err);
-    } finally {
-      setLoading(false);
-    }
-  }
+  // Кешуємо назву обраного інтересу, щоб не шукати її всередині циклу .filter()
+  const selectedInterestName = useMemo(() => {
+    if (selectedInterestId === 0) return null;
+    return interests.find((i) => i.interestId === selectedInterestId)?.name;
+  }, [selectedInterestId, interests]);
 
-  async function handleSearch() {
-    setLoading(true);
-    try {
-      let resp;
-      if (searchCity.trim() !== "") {
-        resp = await profileApi.getByCity(searchCity);
-      } else if (selectedInterestId !== 0) {
-        resp = await profileApi.getByInterestId(selectedInterestId);
-      } else {
-        resp = await profileApi.getAll();
+  const filteredProfiles = useMemo(() => {
+    if (!allProfiles) return [];
+
+    const cleanUsername = debouncedUsername.trim().toLowerCase();
+    const cleanCity = debouncedCity.trim().toLowerCase();
+
+    return allProfiles.filter((profile) => {
+      //  Фільтр нікнейму
+      if (cleanUsername && !profile.username?.toLowerCase().includes(cleanUsername)) {
+        return false;
       }
-      setProfiles(resp.data);
-    } catch (err) {
-      console.error("Помилка пошуку:", err);
-    } finally {
-      setLoading(false);
-    }
-  }
 
-  async function resetFilters() {
+      //  Фільтр міста
+      if (cleanCity && !profile.city?.toLowerCase().includes(cleanCity)) {
+        return false;
+      }
+
+      //  Фільтр інтересів
+      if (selectedInterestId !== 0) {
+        const hasInterest = profile.interests?.some(
+          (interest) => interest === selectedInterestName || interest === selectedInterestId
+        );
+        if (!hasInterest) return false;
+      }
+
+      return true;
+    });
+  }, [allProfiles, debouncedUsername, debouncedCity, selectedInterestId, selectedInterestName]);
+
+  function resetFilters() {
+    setSearchUsername("");
     setSearchCity("");
     setSelectedInterestId(0);
-    setLoading(true);
-    try {
-      const resp = await profileApi.getAll();
-      setProfiles(resp.data);
-    } finally {
-      setLoading(false);
-    }
   }
-
-  const parseImg = (b64) => {
-    return b64
-      ? `data:image/jpeg;base64,${b64}`
-      : "https://via.placeholder.com/150";
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <h3 className="text-3xl font-black text-gray-900 mb-8 text-center tracking-tight">
-          Знайти нових друзів 🔍
+          Знайти нових друзів
         </h3>
 
         {/* Фільтри */}
         <div className="bg-white rounded-[2rem] shadow-xl shadow-blue-900/5 border border-gray-100 p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">
+                Нікнейм
+              </label>
+              <input
+                className="w-full px-5 py-3 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 transition-all outline-none font-medium"
+                placeholder="Введіть нікнейм..."
+                value={searchUsername}
+                onChange={(e) => setSearchUsername(e.target.value)}
+              />
+            </div>
+
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">
                 Місто
@@ -107,18 +150,12 @@ export default function FriendsPage() {
               </select>
             </div>
 
-            <div className="md:col-span-2 flex gap-3 mt-2">
-              <button
-                onClick={handleSearch}
-                className="flex-1 bg-blue-600 text-white font-bold py-3 rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-95"
-              >
-                Пошук
-              </button>
+            <div className="md:col-span-3 flex mt-2">
               <button
                 onClick={resetFilters}
-                className="px-6 bg-gray-100 text-gray-500 font-bold py-3 rounded-2xl hover:bg-gray-200 transition-all active:scale-95"
+                className="w-full bg-gray-100 text-gray-500 font-bold py-3 rounded-2xl hover:bg-gray-200 transition-all active:scale-95"
               >
-                Скинути
+                Скинути фільтри
               </button>
             </div>
           </div>
@@ -130,14 +167,14 @@ export default function FriendsPage() {
             <div className="flex justify-center py-12">
               <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
-          ) : profiles === null ? (
+          ) : allProfiles === null ? (
             <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-gray-300 text-gray-400 font-medium">
               Завантаження профілів...
             </div>
-          ) : profiles.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-3xl shadow-sm border border-gray-100">
+          ) : filteredProfiles.length === 0 ? (
+            <div className="text-center py-12 ">
               <p className="text-gray-500 font-bold text-lg">
-                На жаль, нікого не знайдено 😔
+                На жаль, нікого не знайдено..
               </p>
               <p className="text-gray-400 text-sm">
                 Спробуйте змінити параметри пошуку
@@ -145,7 +182,7 @@ export default function FriendsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4">
-              {profiles.map((profile) => (
+              {filteredProfiles.map((profile) => (
                 <Link
                   to={`/user-profile/${profile.userId}`}
                   key={profile.userId}
