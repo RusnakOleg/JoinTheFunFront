@@ -11,6 +11,10 @@ import { participantsApi } from "../../api/participantsApi";
 
 import { useAuth } from "../../context/AuthContext";
 
+const parseImg = (b64) => {
+  return b64 ? `data:image/jpeg;base64,${b64}` : "https://via.placeholder.com/150";
+};
+
 export default function UserProfilePage() {
   const { userId: profileUserId } = useParams();
   const { user } = useAuth();
@@ -23,8 +27,7 @@ export default function UserProfilePage() {
   const [joinedEventIds, setJoinedEventIds] = useState(new Set());
   const [likedPosts, setLikedPosts] = useState(new Set());
 
-  // Стан для коментарів та їх видимості
-  const [comments, setComments] = useState({}); // { post_1: [...], event_5: [...] }
+  const [comments, setComments] = useState({}); 
   const [visibleComments, setVisibleComments] = useState(new Set());
   const [commentInputs, setCommentInputs] = useState({});
 
@@ -95,10 +98,7 @@ export default function UserProfilePage() {
     setPosts((prev) =>
       prev.map((p) =>
         p.postId === postId
-          ? {
-              ...p,
-              likeCount: alreadyLiked ? p.likeCount - 1 : p.likeCount + 1,
-            }
+          ? { ...p, likeCount: alreadyLiked ? p.likeCount - 1 : p.likeCount + 1 }
           : p,
       ),
     );
@@ -144,7 +144,6 @@ export default function UserProfilePage() {
       newVisible.delete(key);
     } else {
       newVisible.add(key);
-      // Завантажуємо коментарі, якщо їх ще немає в стейті
       if (!comments[key]) {
         const res =
           type === "post"
@@ -170,14 +169,12 @@ export default function UserProfilePage() {
     await commentsApi.create(dto);
     setCommentInputs((prev) => ({ ...prev, [key]: "" }));
 
-    // Оновлюємо список коментарів
     const res =
       type === "post"
         ? await commentsApi.getByPostId(id)
         : await commentsApi.getByEventId(id);
     setComments((prev) => ({ ...prev, [key]: res.data }));
 
-    // Оновлюємо лічильник (тільки для візуалізації, якщо є в об'єкті)
     if (type === "post") {
       setPosts((prev) =>
         prev.map((p) =>
@@ -189,63 +186,102 @@ export default function UserProfilePage() {
     }
   }
 
-  const parseImage = (base64) =>
-    base64 ? `data:image/jpeg;base64,${base64}` : null;
-
   if (loading)
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
 
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-500 font-bold text-lg">Профіль не знайдено</p>
+      </div>
+    );
+  }
+
+  const currentTabItems = activeTab === "posts" ? posts : events;
+
   return (
-    <div className="min-h-screen bg-[#F8F9FD] py-8 px-4">
-      <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* LEFT COLUMN */}
-        <aside className="lg:col-span-4 space-y-6">
-          <div className="bg-white rounded-[2.5rem] shadow-xl p-8 border border-gray-100 sticky top-24">
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      {/* Головний Grid-контейнер тепер слугує обгорткою */}
+      <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative">
+        
+        {/* ЛІВА КОЛОНКА: СТАТИЧНИЙ КОНТЕЙНЕР НА ВЕЛИКИХ ЕКРАНАХ ДЛЯ ЗБЕРЕЖЕННЯ ШИРИНИ */}
+        <aside className="lg:col-span-4 w-full">
+          {/* Застосовуємо lg:fixed та top-24. 
+            Ширина розраховується динамічно від батьківського max-w-5xl мінус відступи,
+            щоб блок не розтягувався на весь екран і не ламав сітку.
+          */}
+          <div className="lg:fixed lg:top-24 lg:w-[calc((100vw-32px)*0.333-16px)] lg:max-w-[312px] w-full bg-white rounded-[2rem] shadow-xl shadow-blue-900/5 border border-gray-100 p-6 z-10">
             <div className="flex flex-col items-center text-center">
-              <img
-                src={
-                  parseImage(profile.avatarUrl) ||
-                  "https://via.placeholder.com/150"
-                }
-                className="w-32 h-32 rounded-[2rem] object-cover ring-4 ring-blue-50 mb-4"
-                alt="Avatar"
-              />
-              <h2 className="text-2xl font-black text-gray-900">
+              <div className="relative mb-4">
+                <img
+                  src={parseImg(profile.avatarUrl)}
+                  className="w-32 h-32 rounded-[2rem] object-cover border border-gray-100 shadow-inner bg-gray-50"
+                  alt={profile.username}
+                />
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-4 border-white rounded-full"></div>
+              </div>
+
+              <h2 className="text-2xl font-black text-gray-900 tracking-tight">
                 {profile.username}
               </h2>
-              <p className="text-blue-500 font-bold text-sm uppercase tracking-widest mt-1">
-                {profile.city} • {profile.age} р.
-              </p>
+              
+              <span className="mt-2 inline-block px-3 py-1 bg-blue-50 text-blue-600 text-xs font-black rounded-full uppercase tracking-tighter">
+                {profile.age} р.
+              </span>
 
               <div className="mt-6 w-full space-y-4 text-left">
-                <div className="p-4 bg-gray-50 rounded-2xl text-gray-600 text-sm leading-relaxed">
-                  {profile.description || "Опис профілю відсутній..."}
-                </div>
+                {/* Місто */}
                 <div>
-                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1">
+                    Місто
+                  </h4>
+                  <div className="px-4 py-3 bg-gray-50 border border-transparent rounded-2xl font-semibold text-gray-700 text-sm flex items-center gap-2">
+                    <span>📍</span> {profile.city || "Не вказано"}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1">
+                    Про себе
+                  </h4>
+                  <div className="p-4 bg-gray-50 rounded-2xl text-gray-500 text-sm leading-relaxed italic border border-transparent">
+                    {profile.description || "Користувач не додав опис профілю"}
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 mb-2">
                     Інтереси
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {profile.interests.map((it, idx) => (
-                      <span
-                        key={idx}
-                        className="bg-white border border-gray-100 text-gray-600 px-3 py-1 rounded-xl text-xs font-bold shadow-sm"
-                      >
-                        #{it}
-                      </span>
-                    ))}
+                    {profile.interests?.length > 0 ? (
+                      profile.interests.map((interest, idx) => (
+                        <span
+                          key={idx}
+                          className="text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded-lg uppercase tracking-wider"
+                        >
+                          #{interest}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-gray-300 italic ml-1">Без інтересів</span>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {profileUserId !== currentUserId && (
+              {profileUserId !== String(currentUserId) && (
                 <button
                   onClick={toggleFollow}
-                  className={`w-full mt-8 py-3 rounded-2xl font-black text-sm transition-all active:scale-95 shadow-lg ${isFollowing ? "bg-gray-100 text-gray-500" : "bg-blue-600 text-white shadow-blue-200"}`}
+                  className={`w-full mt-6 py-3 rounded-2xl font-bold text-sm transition-all active:scale-95 border ${
+                    isFollowing
+                      ? "bg-gray-100 text-gray-500 border-transparent hover:bg-gray-200"
+                      : "bg-blue-600 text-white border-transparent hover:bg-blue-700 shadow-lg shadow-blue-600/10"
+                  }`}
                 >
                   {isFollowing ? "Відписатись" : "Підписатись"}
                 </button>
@@ -254,39 +290,47 @@ export default function UserProfilePage() {
           </div>
         </aside>
 
-        {/* RIGHT COLUMN */}
-        <main className="lg:col-span-8 space-y-6">
-          <div className="bg-white p-2 rounded-2xl flex gap-2 shadow-sm border border-gray-100">
-            {["posts", "events"].map((t) => (
+        {/* ПРАВА КОЛОНКА: СТРІЧКА ПОСТІВ */}
+        {/* ВАЖЛИВО: lg:col-start-5 зміщує стрічку праворуч, звільняючи місце для fixed-блоку */}
+        <main className="lg:col-span-8 lg:col-start-5 space-y-6">
+          <div className="bg-white p-2 rounded-2xl flex gap-2 shadow-xl shadow-blue-900/5 border border-gray-100">
+            {["posts", "events"].map((tab) => (
               <button
-                key={t}
-                onClick={() => setActiveTab(t)}
-                className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all uppercase tracking-widest ${activeTab === t ? "bg-blue-600 text-white shadow-lg" : "text-gray-400 hover:bg-gray-50"}`}
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
+                  activeTab === tab
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-600/10"
+                    : "text-gray-400 hover:bg-gray-50"
+                }`}
               >
-                {t === "posts" ? "Пости" : "Події"} (
-                {t === "posts" ? posts.length : events.length})
+                {tab === "posts" ? "Пости" : "Події"} ({tab === "posts" ? posts.length : events.length})
               </button>
             ))}
           </div>
 
-          <div className="space-y-6">
-            {(activeTab === "posts" ? posts : events).map((item) => {
-              const isPost = activeTab === "posts";
-              const id = isPost ? item.postId : item.eventId;
-              const type = isPost ? "post" : "event";
-              const key = `${type}_${id}`;
-              const isVisible = visibleComments.has(key);
+          <div className="space-y-4">
+            {currentTabItems.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-[2rem] border border-dashed border-gray-300 text-gray-400 font-medium">
+                Тут поки що нічого немає...
+              </div>
+            ) : (
+              currentTabItems.map((item) => {
+                const isPost = activeTab === "posts";
+                const id = isPost ? item.postId : item.eventId;
+                const type = isPost ? "post" : "event";
+                const key = `${type}_${id}`;
+                const isVisible = visibleComments.has(key);
 
-              return (
-                <article
-                  key={key}
-                  className="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden"
-                >
-                  <div className="p-8">
-                    <div className="flex items-center gap-3 mb-6">
+                return (
+                  <article
+                    key={key}
+                    className="bg-white rounded-[2rem] shadow-xl shadow-blue-900/5 border border-gray-100 p-6 transition-all"
+                  >
+                    <div className="flex items-center gap-3 mb-4">
                       <img
-                        src={parseImage(profile.avatarUrl)}
-                        className="w-10 h-10 rounded-xl object-cover"
+                        src={parseImg(profile.avatarUrl)}
+                        className="w-10 h-10 rounded-xl object-cover bg-gray-50"
                         alt="Author"
                       />
                       <div>
@@ -294,41 +338,40 @@ export default function UserProfilePage() {
                           {profile.username}
                         </p>
                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
-                          {isPost
-                            ? "Пост"
-                            : `Подія • ${item.startTime?.split("T")[0]}`}
+                          {isPost ? "Пост" : `Подія • ${item.startTime?.split("T")[0]}`}
                         </p>
                       </div>
-                      {!isPost && (
+                      {!isPost && item.location && (
                         <span className="ml-auto text-blue-600 font-black text-xs uppercase tracking-tighter bg-blue-50 px-3 py-1 rounded-lg">
                           📍 {item.location}
                         </span>
                       )}
                     </div>
 
-                    <h3 className="text-xl font-black text-gray-900 mb-3">
+                    <h3 className="text-xl font-black text-gray-900 mb-2 tracking-tight">
                       {item.title}
                     </h3>
-                    <p className="text-gray-700 leading-relaxed mb-6 font-medium">
+                    <p className="text-gray-600 text-sm leading-relaxed mb-4 font-medium whitespace-pre-line">
                       {item.content || item.description}
                     </p>
 
-                    {/* Post Image */}
                     {isPost && item.imageUrl && (
-                      <div className="rounded-[2rem] overflow-hidden mb-6 border border-gray-50">
+                      <div className="rounded-2xl overflow-hidden mb-4 border border-gray-100 max-h-[400px]">
                         <img
-                          src={parseImage(item.imageUrl)}
-                          className="w-full object-cover max-h-[400px]"
-                          alt="Post"
+                          src={parseImg(item.imageUrl)}
+                          className="w-full object-cover"
+                          alt="Post attachment"
                         />
                       </div>
                     )}
 
-                    <div className="flex items-center gap-4 pt-6 border-t border-gray-50">
+                    <div className="flex items-center gap-2 pt-4 border-t border-gray-50 text-xs">
                       {isPost && (
                         <button
                           onClick={() => toggleLike(id)}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold text-xs ${likedPosts.has(id) ? "bg-red-50 text-red-500" : "bg-gray-50 text-gray-400"}`}
+                          className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl transition-all font-bold ${
+                            likedPosts.has(id) ? "bg-red-50 text-red-500" : "bg-gray-50 text-gray-400 hover:bg-gray-100"
+                          }`}
                         >
                           {likedPosts.has(id) ? "❤️" : "🤍"} {item.likeCount}
                         </button>
@@ -336,7 +379,9 @@ export default function UserProfilePage() {
 
                       <button
                         onClick={() => toggleCommentsVisibility(id, type)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition-all ${isVisible ? "bg-blue-50 text-blue-600" : "bg-gray-50 text-gray-400"}`}
+                        className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold transition-all ${
+                          isVisible ? "bg-blue-50 text-blue-600" : "bg-gray-50 text-gray-400 hover:bg-gray-100"
+                        }`}
                       >
                         💬 Коментарі
                       </button>
@@ -344,22 +389,23 @@ export default function UserProfilePage() {
                       {!isPost && (
                         <button
                           onClick={() => toggleJoinEvent(id)}
-                          className={`ml-auto px-6 py-2 rounded-xl font-black text-xs uppercase transition-all ${joinedEventIds.has(id) ? "bg-gray-100 text-gray-400" : "bg-green-500 text-white shadow-lg shadow-green-200"}`}
+                          className={`ml-auto px-5 py-2.5 rounded-xl font-black uppercase tracking-wider transition-all active:scale-95 ${
+                            joinedEventIds.has(id)
+                              ? "bg-gray-100 text-gray-400"
+                              : "bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-500/10"
+                          }`}
                         >
-                          {joinedEventIds.has(id)
-                            ? "Скасувати"
-                            : `Приєднатись (${item.participantCount})`}
+                          {joinedEventIds.has(id) ? "Скасувати" : `Приєднатись (${item.participantCount})`}
                         </button>
                       )}
                     </div>
 
-                    {/* Comments Expansion */}
                     {isVisible && (
-                      <div className="mt-6 pt-6 border-t border-gray-100 space-y-4 animate-in fade-in slide-in-from-top-2">
-                        <div className="max-h-60 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                      <div className="mt-4 pt-4 border-t border-gray-100 space-y-4">
+                        <div className="max-h-60 overflow-y-auto space-y-3 pr-1">
                           {comments[key]?.map((c, i) => (
-                            <div key={i} className="bg-gray-50 p-4 rounded-2xl">
-                              <span className="font-black text-[10px] text-blue-600 uppercase block mb-1">
+                            <div key={i} className="bg-gray-50 p-3.5 rounded-2xl border border-gray-100/50">
+                              <span className="font-black text-[10px] text-blue-600 uppercase block mb-0.5">
                                 {c.authorUsername}
                               </span>
                               <p className="text-sm text-gray-600 font-medium">
@@ -368,7 +414,7 @@ export default function UserProfilePage() {
                             </div>
                           ))}
                           {(!comments[key] || comments[key].length === 0) && (
-                            <p className="text-center text-xs text-gray-400 py-4">
+                            <p className="text-center text-xs text-gray-400 py-4 italic">
                               Будьте першим, хто прокоментує!
                             </p>
                           )}
@@ -376,7 +422,7 @@ export default function UserProfilePage() {
 
                         <div className="flex gap-2">
                           <input
-                            className="flex-1 bg-gray-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-sm outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
                             placeholder="Напишіть коментар..."
                             value={commentInputs[key] || ""}
                             onChange={(e) =>
@@ -385,22 +431,26 @@ export default function UserProfilePage() {
                                 [key]: e.target.value,
                               }))
                             }
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleAddComment(id, type);
+                            }}
                           />
                           <button
                             onClick={() => handleAddComment(id, type)}
-                            className="bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 transition-all"
+                            className="bg-blue-600 text-white px-4 rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center active:scale-95"
                           >
                             🚀
                           </button>
                         </div>
                       </div>
                     )}
-                  </div>
-                </article>
-              );
-            })}
+                  </article>
+                );
+              })
+            )}
           </div>
         </main>
+
       </div>
     </div>
   );
