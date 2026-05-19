@@ -5,15 +5,13 @@ export default function MainLayout() {
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
 
-  // Функція для визначення активного посилання
   const isActive = (path) => location.pathname === path;
 
   return (
     <div className="min-h-screen bg-[#f8f9fd]">
-      {/* NAVBAR */}
-      <nav className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-20">
+      <nav className="sticky top-0 z-50 h-20 bg-white/70 backdrop-blur-xl border-b border-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+          <div className="flex justify-between items-center h-full">
             {/* Logo & Main Nav */}
             <div className="flex items-center gap-8">
               <Link
@@ -55,22 +53,10 @@ export default function MainLayout() {
             <div className="flex items-center gap-4">
               {!isAuthenticated ? (
                 <div className="flex items-center gap-3">
-                  <Link
-                    to="/login"
-                    className="px-5 py-2.5 text-sm font-black text-gray-600 hover:text-gray-900 transition-colors"
-                  >
-                    Вхід
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="px-5 py-2.5 text-sm font-black text-white bg-blue-600 rounded-2xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all active:scale-95"
-                  >
-                    Реєстрація
-                  </Link>
+                  
                 </div>
               ) : (
                 <div className="flex items-center gap-4">
-                  {/* User Greeting */}
                   <div className="hidden lg:block text-right">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">
                       Вітаємо,
@@ -80,7 +66,6 @@ export default function MainLayout() {
                     </p>
                   </div>
 
-                  {/* Profile Link */}
                   <Link
                     to="/profile"
                     className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all border-2 ${
@@ -105,7 +90,6 @@ export default function MainLayout() {
                     </svg>
                   </Link>
 
-                  {/* Logout */}
                   <button
                     onClick={logout}
                     className="p-3 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-2xl transition-all"
@@ -134,7 +118,7 @@ export default function MainLayout() {
       </nav>
 
       {/* MAIN CONTENT */}
-      <main className="py-8">
+      <main>
         <Outlet />
       </main>
     </div>
