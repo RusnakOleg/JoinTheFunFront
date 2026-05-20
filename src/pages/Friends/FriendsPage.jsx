@@ -141,7 +141,7 @@ export default function FriendsPage() {
                 value={selectedInterestId}
                 onChange={(e) => setSelectedInterestId(Number(e.target.value))}
               >
-                <option value="0">Усі категорії</option>
+                <option value="0">Усі інтереси</option>
                 {interests.map((i) => (
                   <option key={i.interestId} value={i.interestId}>
                     {i.name}

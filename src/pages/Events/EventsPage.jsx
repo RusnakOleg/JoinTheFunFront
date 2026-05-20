@@ -15,6 +15,8 @@ export default function EventsPage() {
   const [joinedEventIds, setJoinedEventIds] = useState(new Set());
   const [searchCity, setSearchCity] = useState("");
   const [loading, setLoading] = useState(true);
+  
+  const [filterStatus, setFilterStatus] = useState("all");
 
   useEffect(() => {
     if (userId) loadData();
@@ -51,6 +53,7 @@ export default function EventsPage() {
 
   async function handleReset() {
     setSearchCity("");
+    setFilterStatus("all");
     setLoading(true);
     try {
       const eventsRes = await eventsApi.getAll();
@@ -96,6 +99,14 @@ export default function EventsPage() {
     }
   }
 
+  // Обчислюємо відфільтрований список перед відмальовуванням
+  const filteredEvents = events?.filter((ev) => {
+    const isJoined = joinedEventIds.has(ev.eventId);
+    if (filterStatus === "joined") return isJoined;
+    if (filterStatus === "not_joined") return !isJoined;
+    return true; 
+  }) || [];
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-5xl mx-auto">
@@ -111,16 +122,16 @@ export default function EventsPage() {
           </div>
 
           <button
-          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-6 py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-green-500/10 transition-all active:scale-95"
-          onClick={() => navigate("/create-event")}
-        >
-          <Plus className="w-4 h-4" strokeWidth={2.8} /> 
-          <span>Створити подію</span>
-        </button>
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-6 py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-green-500/10 transition-all active:scale-95"
+            onClick={() => navigate("/create-event")}
+          >
+            <Plus className="w-4 h-4" strokeWidth={2.8} /> 
+            <span>Створити подію</span>
+          </button>
         </div>
 
-        {/* Пошук */}
-        <div className="bg-white p-4 rounded-[2rem] shadow-xl shadow-blue-900/5 border border-gray-100 mb-8 flex flex-col sm:flex-row gap-3">
+        {/* Панель пошуку та фільтрації */}
+        <div className="bg-white p-4 rounded-[2rem] shadow-xl shadow-blue-900/5 border border-gray-100 mb-8 flex flex-col md:flex-row gap-3">
           <input
             className="flex-1 px-5 py-3 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 transition-all outline-none font-medium text-sm"
             placeholder="Введіть назву міста (напр. Київ)..."
@@ -128,19 +139,33 @@ export default function EventsPage() {
             onChange={(e) => setSearchCity(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSearch()}
           />
-          <div className="flex gap-2 w-full sm:w-auto">
-            <button
-              className="flex-1 sm:flex-none bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold text-sm transition-all hover:bg-blue-700 active:scale-95 shadow-lg shadow-blue-500/10"
-              onClick={handleSearch}
+          
+          <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="bg-gray-50 text-gray-700 px-4 py-3 rounded-2xl font-bold text-sm border border-transparent focus:border-blue-500 focus:bg-white transition-all outline-none cursor-pointer appearance-none min-w-[160px]"
             >
-              Пошук
-            </button>
-            <button
-              className="bg-gray-100 text-gray-500 px-5 py-3 rounded-2xl font-bold text-sm transition-all hover:bg-gray-200 active:scale-95"
-              onClick={handleReset}
-            >
-             Скинути
-            </button>
+              <option value="all"> Усі події</option>
+              <option value="joined"> Я беру участь</option>
+              <option value="not_joined"> Я не беру участь</option>
+            </select>
+
+            <div className="flex gap-2 flex-1 sm:flex-none">
+              <button
+                className="flex-1 sm:flex-none bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold text-sm transition-all hover:bg-blue-700 active:scale-95 shadow-lg shadow-blue-500/10"
+                onClick={handleSearch}
+              >
+                Пошук
+              </button>
+              <button
+                className="bg-gray-100 text-gray-500 px-5 py-3 rounded-2xl font-bold text-sm transition-all hover:bg-gray-200 active:scale-95"
+                onClick={handleReset}
+              >
+                Скинути
+              </button>
+            </div>
           </div>
         </div>
 
@@ -153,14 +178,20 @@ export default function EventsPage() {
           <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-gray-300 text-gray-400 font-medium">
             Завантаження списку подій...
           </div>
-        ) : events.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 font-bold text-lg">Нічого не знайдено..</p>
-            <p className="text-gray-400 text-sm">Спробуйте змінити параметри пошуку міста</p>
+        ) : filteredEvents.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-[2rem] p-8 border border-gray-100 shadow-xl shadow-blue-900/5">
+            <p className="text-gray-500 font-bold text-lg">Нічого не знайдено</p>
+            <p className="text-gray-400 text-sm mt-1">
+              {filterStatus === "joined" 
+                ? "Ви ще не долучилися до жодної події у цьому місті." 
+                : filterStatus === "not_joined"
+                ? "Ви берете участь в усіх знайдених подіях."
+                : "Спробуйте змінити параметри пошуку міста."}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((ev) => (
+            {filteredEvents.map((ev) => (
               <div
                 key={ev.eventId}
                 className="group bg-white p-5 sm:p-6 rounded-[2rem] shadow-xl shadow-blue-900/5 border border-gray-100 transition-all duration-300 hover:shadow-md flex flex-col justify-between"
@@ -218,7 +249,7 @@ export default function EventsPage() {
                   </div>
                 </div>
 
-                {/* Кнопка дії (Завжди притиснута до низу картки) */}
+                {/* Кнопка дії */}
                 <button
                   className={`w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all active:scale-95 border ${
                     joinedEventIds.has(ev.eventId)
