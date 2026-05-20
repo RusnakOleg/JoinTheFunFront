@@ -220,7 +220,7 @@ export default function EventsPage() {
 
                 {/* Кнопка дії (Завжди притиснута до низу картки) */}
                 <button
-                  className={`w-full py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all active:scale-95 border ${
+                  className={`w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all active:scale-95 border ${
                     joinedEventIds.has(ev.eventId)
                       ? "bg-gray-100 text-gray-400 border-transparent hover:bg-red-50 hover:text-red-500 hover:border-red-100"
                       : "bg-blue-600 text-white border-transparent hover:bg-blue-700 shadow-lg shadow-blue-500/10"

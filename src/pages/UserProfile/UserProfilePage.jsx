@@ -105,34 +105,48 @@ export default function UserProfilePage() {
     );
   }
 
-  async function toggleJoinEvent(eventId) {
+ async function toggleJoinEvent(eventId) {
     const isJoined = joinedEventIds.has(eventId);
-    const dto = { eventId, userId: currentUserId };
+    
+    // Створюємо правильний DTO, як на сторінці EventsPage
+    const dto = isJoined 
+      ? { eventId, userId: currentUserId } 
+      : { eventId, userId: currentUserId, status: "going" };
 
-    if (isJoined) {
-      await participantsApi.leave(dto);
-      setJoinedEventIds((prev) => {
-        const n = new Set(prev);
-        n.delete(eventId);
-        return n;
-      });
-      setEvents((prev) =>
-        prev.map((e) =>
-          e.eventId === eventId
-            ? { ...e, participantCount: e.participantCount - 1 }
-            : e,
-        ),
-      );
-    } else {
-      await participantsApi.join(dto);
-      setJoinedEventIds((prev) => new Set(prev).add(eventId));
-      setEvents((prev) =>
-        prev.map((e) =>
-          e.eventId === eventId
-            ? { ...e, participantCount: e.participantCount + 1 }
-            : e,
-        ),
-      );
+    try {
+      if (isJoined) {
+        // Замість .leave використовуємо .remove
+        await participantsApi.remove(dto);
+        
+        setJoinedEventIds((prev) => {
+          const n = new Set(prev);
+          n.delete(eventId);
+          return n;
+        });
+        setEvents((prev) =>
+          prev.map((e) =>
+            e.eventId === eventId
+              ? { ...e, participantCount: e.participantCount - 1 }
+              : e,
+          ),
+        );
+      } else {
+        // Замість .join використовуємо .add
+        await participantsApi.add(dto);
+        
+        setJoinedEventIds((prev) => new Set(prev).add(eventId));
+        setEvents((prev) =>
+          prev.map((e) =>
+            e.eventId === eventId
+              ? { ...e, participantCount: e.participantCount + 1 }
+              : e,
+          ),
+        );
+      }
+    } catch (err) {
+      console.error("Помилка при зміні статусу участі:", err);
+      // При бажанні, тут можна викликати повторне завантаження даних loadData(), 
+      // щоб синхронізувати стан із сервером у разі помилки запиту
     }
   }
 
@@ -430,11 +444,11 @@ export default function UserProfilePage() {
                             onClick={() => toggleJoinEvent(id)}
                             className={`ml-auto px-5 py-2.5 rounded-xl font-black  tracking-wider transition-all active:scale-95 ${
                               joinedEventIds.has(id)
-                                ? "bg-gray-100 text-gray-400"
+                                ? "bg-gray-100 text-gray-400 border-transparent hover:bg-red-50 hover:text-red-500 hover:border-red-100"
                                 : "bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-500/10"
                             }`}
                           >
-                            {joinedEventIds.has(id) ? "Скасувати" : "Приєднатись"}
+                            {joinedEventIds.has(id) ? "Скасувати участь" : "Долучитись"}
                           </button>
                         </div>               
                       </div>
