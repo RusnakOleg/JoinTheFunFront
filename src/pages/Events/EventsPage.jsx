@@ -1,22 +1,42 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { eventsApi } from "../../api/eventsApi";
 import { participantsApi } from "../../api/participantsApi";
 import { useAuth } from "../../context/AuthContext";
-import { CalendarDays, MapPin, Plus, User, Users} from "lucide-react";
+import { CalendarDays, MapPin, Plus, User, Users } from "lucide-react";
+
+// Хук для затримки оновлення тексту (Debounce)
+function useDebounce(value, delay = 300) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export default function EventsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const userId = user?.userId;
 
-  const [events, setEvents] = useState(null);
+  // Кешуємо всі завантажені події та Set з ID подій, де користувач бере участь
+  const [allEvents, setAllEvents] = useState(null);
   const [joinedEventIds, setJoinedEventIds] = useState(new Set());
-  const [searchCity, setSearchCity] = useState("");
-  const [loading, setLoading] = useState(true);
   
+  // Контрольовані стани для інпутів (для миттєвого відображення введення)
+  const [searchCity, setSearchCity] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [loading, setLoading] = useState(true);
+
+  // Дебаунс-значення для текстового поля міста
+  const debouncedCity = useDebounce(searchCity, 300);
 
   useEffect(() => {
     if (userId) loadData();
@@ -25,57 +45,62 @@ export default function EventsPage() {
   async function loadData() {
     setLoading(true);
     try {
-      const eventsRes = await eventsApi.getAll();
-      setEvents(eventsRes.data);
+      // Завантажуємо все паралельно
+      const [eventsRes, joinedRes] = await Promise.all([
+        eventsApi.getAll(),
+        participantsApi.getByUserId(userId)
+      ]);
 
-      const joinedRes = await participantsApi.getByUserId(userId);
+      setAllEvents(eventsRes.data);
       setJoinedEventIds(new Set(joinedRes.data.map((p) => p.eventId)));
     } catch (err) {
-      console.error("Помилка завантаження подій:", err);
+      console.error("Помилка завантаження даних подій:", err);
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleSearch() {
-    setLoading(true);
-    try {
-      const res = searchCity.trim()
-        ? await eventsApi.getByLocation(searchCity)
-        : await eventsApi.getAll();
-      setEvents(res.data);
-    } catch (err) {
-      console.error("Помилка пошуку:", err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleReset() {
+  // Очищення фільтрів
+  function handleReset() {
     setSearchCity("");
     setFilterStatus("all");
-    setLoading(true);
-    try {
-      const eventsRes = await eventsApi.getAll();
-      setEvents(eventsRes.data);
-    } catch (err) {
-      console.error("Помилка скидання:", err);
-    } finally {
-      setLoading(false);
-    }
   }
 
+  // Оптимізована та миттєва фільтрація за допомогою useMemo
+  const filteredEvents = useMemo(() => {
+    if (!allEvents) return [];
+
+    const cleanCity = debouncedCity.trim().toLowerCase();
+
+    return allEvents.filter((ev) => {
+      // 1. Фільтр за містом (частковий збіг, незалежно від регістру)
+      if (cleanCity && !ev.location?.toLowerCase().includes(cleanCity)) {
+        return false;
+      }
+
+      // 2. Фільтр за статусом участі
+      const isJoined = joinedEventIds.has(ev.eventId);
+      if (filterStatus === "joined" && !isJoined) return false;
+      if (filterStatus === "not_joined" && isJoined) return false;
+
+      return true;
+    });
+  }, [allEvents, debouncedCity, filterStatus, joinedEventIds]);
+
+  // Функція запису/видалення з події (зі збереженням локального стану)
   async function toggleJoin(eventId) {
     const isJoined = joinedEventIds.has(eventId);
 
+    // Оптимістично оновлюємо статус участі в Set
     setJoinedEventIds((prev) => {
       const next = new Set(prev);
       isJoined ? next.delete(eventId) : next.add(eventId);
       return next;
     });
 
-    setEvents((prev) =>
-      prev.map((ev) =>
+    // Оптимістично змінюємо лічильник учасників у масиві всіх подій
+    setAllEvents((prev) =>
+      prev ? prev.map((ev) =>
         ev.eventId === eventId
           ? {
               ...ev,
@@ -84,7 +109,7 @@ export default function EventsPage() {
                 : ev.participantCount + 1,
             }
           : ev
-      )
+      ) : null
     );
 
     try {
@@ -95,17 +120,9 @@ export default function EventsPage() {
       }
     } catch (err) {
       console.error("Join/Leave error:", err);
-      loadData();
+      loadData(); // Якщо сервер повернув помилку — перекачуємо актуальні дані
     }
   }
-
-  // Обчислюємо відфільтрований список перед відмальовуванням
-  const filteredEvents = events?.filter((ev) => {
-    const isJoined = joinedEventIds.has(ev.eventId);
-    if (filterStatus === "joined") return isJoined;
-    if (filterStatus === "not_joined") return !isJoined;
-    return true; 
-  }) || [];
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
@@ -132,40 +149,32 @@ export default function EventsPage() {
 
         {/* Панель пошуку та фільтрації */}
         <div className="bg-white p-4 rounded-[2rem] shadow-xl shadow-blue-900/5 border border-gray-100 mb-8 flex flex-col md:flex-row gap-3">
-          <input
-            className="flex-1 px-5 py-3 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 transition-all outline-none font-medium text-sm"
-            placeholder="Введіть назву міста (напр. Київ)..."
-            value={searchCity}
-            onChange={(e) => setSearchCity(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-          />
+          <div className="flex-1 flex flex-col gap-2">
+            <input
+              className="w-full px-5 py-3 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 transition-all outline-none font-medium text-sm"
+              placeholder="Введіть назву міста (напр. Київ)..."
+              value={searchCity}
+              onChange={(e) => setSearchCity(e.target.value)}
+            />
+          </div>
           
           <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="bg-gray-50 text-gray-700 px-4 py-3 rounded-2xl font-bold text-sm border border-transparent focus:border-blue-500 focus:bg-white transition-all outline-none cursor-pointer appearance-none min-w-[160px]"
+              className="bg-gray-50 text-gray-700 px-5 py-3 rounded-2xl font-bold text-sm border border-transparent focus:border-blue-500 focus:bg-white transition-all outline-none cursor-pointer appearance-none min-w-[180px]"
             >
-              <option value="all"> Усі події</option>
-              <option value="joined"> Я беру участь</option>
-              <option value="not_joined"> Я не беру участь</option>
+              <option value="all">Усі події</option>
+              <option value="joined">Я беру участь</option>
+              <option value="not_joined">Я не беру участь</option>
             </select>
 
-            <div className="flex gap-2 flex-1 sm:flex-none">
-              <button
-                className="flex-1 sm:flex-none bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold text-sm transition-all hover:bg-blue-700 active:scale-95 shadow-lg shadow-blue-500/10"
-                onClick={handleSearch}
-              >
-                Пошук
-              </button>
-              <button
-                className="bg-gray-100 text-gray-500 px-5 py-3 rounded-2xl font-bold text-sm transition-all hover:bg-gray-200 active:scale-95"
-                onClick={handleReset}
-              >
-                Скинути
-              </button>
-            </div>
+            <button
+              className="bg-gray-100 text-gray-500 px-5 py-3 rounded-2xl font-bold text-sm transition-all hover:bg-gray-200 active:scale-95 w-full sm:w-auto"
+              onClick={handleReset}
+            >
+              Скинути
+            </button>
           </div>
         </div>
 
@@ -174,16 +183,16 @@ export default function EventsPage() {
           <div className="flex justify-center py-12">
             <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
-        ) : events === null ? (
+        ) : allEvents === null ? (
           <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-gray-300 text-gray-400 font-medium">
             Завантаження списку подій...
           </div>
         ) : filteredEvents.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-[2rem] p-8 border border-gray-100 shadow-xl shadow-blue-900/5">
+          <div className="text-center py-12  rounded-[2rem] p-8  ">
             <p className="text-gray-500 font-bold text-lg">Нічого не знайдено</p>
             <p className="text-gray-400 text-sm mt-1">
               {filterStatus === "joined" 
-                ? "Ви ще не долучилися до жодної події у цьому місті." 
+                ? "Ви ще не долучилися до жодної події." 
                 : filterStatus === "not_joined"
                 ? "Ви берете участь в усіх знайдених подіях."
                 : "Спробуйте змінити параметри пошуку міста."}
@@ -225,7 +234,8 @@ export default function EventsPage() {
                           month: "long",
                           hour: "2-digit",
                           minute: "2-digit",
-                        })}
+                          },
+                        )}
                       </span>
                     </div>
 
