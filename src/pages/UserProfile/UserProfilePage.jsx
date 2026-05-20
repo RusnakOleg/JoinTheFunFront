@@ -10,6 +10,7 @@ import { followApi } from "../../api/followApi";
 import { participantsApi } from "../../api/participantsApi";
 
 import { useAuth } from "../../context/AuthContext";
+import { CalendarDays, Heart, MapPin, MessageCircle, SendHorizontal, Users } from "lucide-react";
 
 const parseImg = (b64) => {
   return b64 ? `data:image/jpeg;base64,${b64}` : "https://via.placeholder.com/150";
@@ -225,7 +226,7 @@ export default function UserProfilePage() {
               </h2>
               
               <span className="mt-2 inline-block px-3 py-1 bg-blue-50 text-blue-600 text-xs font-black rounded-full uppercase tracking-tighter">
-                {profile.age} р.
+                {profile.age} років
               </span>
 
               <div className="mt-6 w-full space-y-4 text-left">
@@ -234,7 +235,7 @@ export default function UserProfilePage() {
                     Місто
                   </h4>
                   <div className="px-4 py-3 bg-gray-50 border border-transparent rounded-2xl font-semibold text-gray-700 text-sm flex items-center gap-2">
-                    <span>📍</span> {profile.city || "Не вказано"}
+                    <span><MapPin className="w-4 h-4 text-red-500"/></span> {profile.city || "Не вказано"}
                   </div>
                 </div>
 
@@ -323,18 +324,16 @@ export default function UserProfilePage() {
                       className="bg-white rounded-[2rem] shadow-xl shadow-blue-900/5 border border-gray-100 p-6 transition-all"
                     >
                       <div className="flex items-center gap-3 mb-4">
-                        <img
-                          src={parseImg(profile.avatarUrl)}
-                          className="w-10 h-10 rounded-xl object-cover bg-gray-50"
-                          alt="Author"
-                        />
+                        <div className="w-10 h-10 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center font-black text-blue-600 text-base uppercase shadow-inner">
+                      {item.authorUsername?.charAt(0)}
+                    </div>
                         <div>
-                          <p className="font-black text-gray-900 text-sm leading-none">
+                    <p className="font-black text-gray-900 tracking-tight leading-none mb-1 text-base">
                             {profile.username}
                           </p>
-                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
-                            Пост
-                          </p>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                       {new Date(item.createdAt).toLocaleDateString("uk-UA")}
+                    </p>
                         </div>
                       </div>
 
@@ -362,7 +361,7 @@ export default function UserProfilePage() {
                             likedPosts.has(id) ? "bg-red-50 text-red-500" : "bg-gray-50 text-gray-400 hover:bg-gray-100"
                           }`}
                         >
-                          {likedPosts.has(id) ? "❤️" : "🤍"} {item.likeCount}
+                          {likedPosts.has(id) ? <Heart  className="w-4 h-4 text-red-500" strokeWidth={2.8} fill="#ff0000"/> : <Heart  className="w-4 h-4 text-white-500" strokeWidth={2.8}  fill="#ffffff"/>} {item.likeCount}
                         </button>
 
                         <button
@@ -371,7 +370,7 @@ export default function UserProfilePage() {
                             isVisible ? "bg-blue-50 text-blue-600" : "bg-gray-50 text-gray-400 hover:bg-gray-100"
                           }`}
                         >
-                          💬 Коментарі
+                           <MessageCircle className="w-4 h-4 text-white-500" strokeWidth={2.8} /> {item.commentCount}
                         </button>
                       </div>
 
@@ -413,18 +412,18 @@ export default function UserProfilePage() {
                         <div className="flex flex-wrap gap-2 mb-4">
                           {item.location && (
                             <div className="flex items-center text-xs font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg uppercase tracking-tighter">
-                              <span className="mr-1.5">📍</span> {item.location}
+                              <span className="mr-1.5"><MapPin className="w-4 h-4 text-red-500"/></span> {item.location}
                             </div>
                           )}
-                          <div className="flex items-center text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg uppercase tracking-wider text-[10px]">
-                            <span className="mr-1.5">📅</span>
+                          <div className="flex items-center text-xs font-bold text-gray-500 bg-green-50 px-3 py-1.5 rounded-lg uppercase tracking-wider text-[10px]">
+                            <span className="mr-1.5"><CalendarDays className="w-4 h-4 text-gray-500"/></span>
                             {item.startTime && new Date(item.startTime).toLocaleDateString("uk-UA", {
                               day: "numeric",
                               month: "long",
                             })}
                           </div>
-                          <div className="flex items-center text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg uppercase tracking-wider text-[10px]">
-                            <span className="mr-1.5">👥</span>
+                          <div className="flex items-center text-xs font-bold text-gray-500 bg-purple-50 px-3 py-1.5 rounded-lg uppercase tracking-wider text-[10px]">
+                            <span className="mr-1.5"><Users className="w-4 h-4 text-gray-500"/></span>
                             {item.participantCount} учасників
                           </div>
                           <button
@@ -491,7 +490,7 @@ export default function UserProfilePage() {
             onClick={() => handleAddComment(id, type)}
             className="bg-blue-600 text-white px-4 rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center active:scale-95"
           >
-            🚀
+            <SendHorizontal className="w-4 h-4 text-white-500" strokeWidth={2.8}/>
           </button>
         </div>
       </div>

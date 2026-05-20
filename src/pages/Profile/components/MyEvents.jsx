@@ -69,7 +69,7 @@ export default function MyEvents({ events, show, onToggle, deleteEvent }) {
                           <span className="mr-1.5"><MapPin className="w-4 h-4 text-red-500"/></span> {ev.location}
                         </div>
                       )}
-                      <div className="flex items-center text-xs font-bold text-gray-500 bg-blue-50 px-3 py-1.5 rounded-lg uppercase tracking-wider text-[10px]">
+                      <div className="flex items-center text-xs font-bold text-gray-500 bg-green-50 px-3 py-1.5 rounded-lg uppercase tracking-wider text-[10px]">
                         <span className="mr-1.5"><CalendarDays className="w-4 h-4 text-gray-500"/></span>
                         {new Date(ev.startTime).toLocaleDateString("uk-UA", {
                           day: "numeric",
