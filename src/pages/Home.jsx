@@ -44,13 +44,13 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
               to="/register"
-              className="no-underline px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-[11px] rounded-xl transition-all transform hover:scale-105 shadow-2xl shadow-blue-600/40 active:scale-95"
+              className="no-underline px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-[11px] rounded-2xl transition-all transform hover:scale-105 shadow-2xl shadow-blue-600/40 active:scale-95"
             >
               Створити акаунт
             </Link>
             <Link
               to="/login"
-              className="no-underline px-8 py-4 bg-white/10 backdrop-blur-xl border border-white/20 hover:bg-white/20 text-white font-black uppercase tracking-widest text-[11px] rounded-xl transition-all active:scale-95"
+              className="no-underline px-8 py-4 bg-white/10 backdrop-blur-xl border border-white/20 hover:bg-white/20 text-white font-black uppercase tracking-widest text-[11px] rounded-2xl transition-all active:scale-95"
             >
               Увійти
             </Link>
