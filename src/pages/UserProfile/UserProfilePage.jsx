@@ -205,15 +205,10 @@ export default function UserProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
-      {/* Головний Grid-контейнер тепер слугує обгорткою */}
       <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative">
         
-        {/* ЛІВА КОЛОНКА: СТАТИЧНИЙ КОНТЕЙНЕР НА ВЕЛИКИХ ЕКРАНАХ ДЛЯ ЗБЕРЕЖЕННЯ ШИРИНИ */}
+        {/* ЛІВА КОЛОНКА */}
         <aside className="lg:col-span-4 w-full">
-          {/* Застосовуємо lg:fixed та top-24. 
-            Ширина розраховується динамічно від батьківського max-w-5xl мінус відступи,
-            щоб блок не розтягувався на весь екран і не ламав сітку.
-          */}
           <div className="lg:fixed lg:top-24 lg:w-[calc((100vw-32px)*0.333-16px)] lg:max-w-[312px] w-full bg-white rounded-[2rem] shadow-xl shadow-blue-900/5 border border-gray-100 p-6 z-10">
             <div className="flex flex-col items-center text-center">
               <div className="relative mb-4">
@@ -234,7 +229,6 @@ export default function UserProfilePage() {
               </span>
 
               <div className="mt-6 w-full space-y-4 text-left">
-                {/* Місто */}
                 <div>
                   <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 mb-1">
                     Місто
@@ -290,18 +284,17 @@ export default function UserProfilePage() {
           </div>
         </aside>
 
-        {/* ПРАВА КОЛОНКА: СТРІЧКА ПОСТІВ */}
-        {/* ВАЖЛИВО: lg:col-start-5 зміщує стрічку праворуч, звільняючи місце для fixed-блоку */}
+        {/* ПРАВА КОЛОНКА */}
         <main className="lg:col-span-8 lg:col-start-5 space-y-6">
-          <div className="bg-white p-2 rounded-2xl flex gap-2 shadow-xl shadow-blue-900/5 border border-gray-100">
+          <div className="bg-white p-2 rounded-[2rem] shadow-sm border border-gray-100 flex gap-2">
             {["posts", "events"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
+                className={`flex-1 py-4 rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${
                   activeTab === tab
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-600/10"
-                    : "text-gray-400 hover:bg-gray-50"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
+                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
                 }`}
               >
                 {tab === "posts" ? "Пости" : "Події"} ({tab === "posts" ? posts.length : events.length})
@@ -311,9 +304,9 @@ export default function UserProfilePage() {
 
           <div className="space-y-4">
             {currentTabItems.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-[2rem] border border-dashed border-gray-300 text-gray-400 font-medium">
-                Тут поки що нічого немає...
-              </div>
+              <div className="text-center py-12">
+            <p className="text-gray-500 font-bold text-lg">Подій поки немає</p>
+          </div>
             ) : (
               currentTabItems.map((item) => {
                 const isPost = activeTab === "posts";
@@ -322,51 +315,47 @@ export default function UserProfilePage() {
                 const key = `${type}_${id}`;
                 const isVisible = visibleComments.has(key);
 
-                return (
-                  <article
-                    key={key}
-                    className="bg-white rounded-[2rem] shadow-xl shadow-blue-900/5 border border-gray-100 p-6 transition-all"
-                  >
-                    <div className="flex items-center gap-3 mb-4">
-                      <img
-                        src={parseImg(profile.avatarUrl)}
-                        className="w-10 h-10 rounded-xl object-cover bg-gray-50"
-                        alt="Author"
-                      />
-                      <div>
-                        <p className="font-black text-gray-900 text-sm leading-none">
-                          {profile.username}
-                        </p>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
-                          {isPost ? "Пост" : `Подія • ${item.startTime?.split("T")[0]}`}
-                        </p>
-                      </div>
-                      {!isPost && item.location && (
-                        <span className="ml-auto text-blue-600 font-black text-xs uppercase tracking-tighter bg-blue-50 px-3 py-1 rounded-lg">
-                          📍 {item.location}
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className="text-xl font-black text-gray-900 mb-2 tracking-tight">
-                      {item.title}
-                    </h3>
-                    <p className="text-gray-600 text-sm leading-relaxed mb-4 font-medium whitespace-pre-line">
-                      {item.content || item.description}
-                    </p>
-
-                    {isPost && item.imageUrl && (
-                      <div className="rounded-2xl overflow-hidden mb-4 border border-gray-100 max-h-[400px]">
+                // Якщо це Пост — рендеримо стандартну картку поста
+                if (isPost) {
+                  return (
+                    <article
+                      key={key}
+                      className="bg-white rounded-[2rem] shadow-xl shadow-blue-900/5 border border-gray-100 p-6 transition-all"
+                    >
+                      <div className="flex items-center gap-3 mb-4">
                         <img
-                          src={parseImg(item.imageUrl)}
-                          className="w-full object-cover"
-                          alt="Post attachment"
+                          src={parseImg(profile.avatarUrl)}
+                          className="w-10 h-10 rounded-xl object-cover bg-gray-50"
+                          alt="Author"
                         />
+                        <div>
+                          <p className="font-black text-gray-900 text-sm leading-none">
+                            {profile.username}
+                          </p>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+                            Пост
+                          </p>
+                        </div>
                       </div>
-                    )}
 
-                    <div className="flex items-center gap-2 pt-4 border-t border-gray-50 text-xs">
-                      {isPost && (
+                      <h3 className="text-xl font-black text-gray-900 mb-2 tracking-tight">
+                        {item.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm leading-relaxed mb-4 font-medium whitespace-pre-line">
+                        {item.content}
+                      </p>
+
+                      {item.imageUrl && (
+                        <div className="rounded-2xl overflow-hidden mb-4 border border-gray-100 max-h-[400px]">
+                          <img
+                            src={parseImg(item.imageUrl)}
+                            className="w-full object-cover"
+                            alt="Post attachment"
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2 pt-4 border-t border-gray-50 text-xs">
                         <button
                           onClick={() => toggleLike(id)}
                           className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl transition-all font-bold ${
@@ -375,83 +364,137 @@ export default function UserProfilePage() {
                         >
                           {likedPosts.has(id) ? "❤️" : "🤍"} {item.likeCount}
                         </button>
-                      )}
 
-                      <button
-                        onClick={() => toggleCommentsVisibility(id, type)}
-                        className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold transition-all ${
-                          isVisible ? "bg-blue-50 text-blue-600" : "bg-gray-50 text-gray-400 hover:bg-gray-100"
-                        }`}
-                      >
-                        💬 Коментарі
-                      </button>
-
-                      {!isPost && (
                         <button
-                          onClick={() => toggleJoinEvent(id)}
-                          className={`ml-auto px-5 py-2.5 rounded-xl font-black uppercase tracking-wider transition-all active:scale-95 ${
-                            joinedEventIds.has(id)
-                              ? "bg-gray-100 text-gray-400"
-                              : "bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-500/10"
+                          onClick={() => toggleCommentsVisibility(id, type)}
+                          className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold transition-all ${
+                            isVisible ? "bg-blue-50 text-blue-600" : "bg-gray-50 text-gray-400 hover:bg-gray-100"
                           }`}
                         >
-                          {joinedEventIds.has(id) ? "Скасувати" : `Приєднатись (${item.participantCount})`}
+                          💬 Коментарі
                         </button>
-                      )}
-                    </div>
-
-                    {isVisible && (
-                      <div className="mt-4 pt-4 border-t border-gray-100 space-y-4">
-                        <div className="max-h-60 overflow-y-auto space-y-3 pr-1">
-                          {comments[key]?.map((c, i) => (
-                            <div key={i} className="bg-gray-50 p-3.5 rounded-2xl border border-gray-100/50">
-                              <span className="font-black text-[10px] text-blue-600 uppercase block mb-0.5">
-                                {c.authorUsername}
-                              </span>
-                              <p className="text-sm text-gray-600 font-medium">
-                                {c.content}
-                              </p>
-                            </div>
-                          ))}
-                          {(!comments[key] || comments[key].length === 0) && (
-                            <p className="text-center text-xs text-gray-400 py-4 italic">
-                              Будьте першим, хто прокоментує!
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="flex gap-2">
-                          <input
-                            className="flex-1 bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-sm outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
-                            placeholder="Напишіть коментар..."
-                            value={commentInputs[key] || ""}
-                            onChange={(e) =>
-                              setCommentInputs((prev) => ({
-                                ...prev,
-                                [key]: e.target.value,
-                              }))
-                            }
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleAddComment(id, type);
-                            }}
-                          />
-                          <button
-                            onClick={() => handleAddComment(id, type)}
-                            className="bg-blue-600 text-white px-4 rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center active:scale-95"
-                          >
-                            🚀
-                          </button>
-                        </div>
                       </div>
-                    )}
-                  </article>
+
+                      {/* Блок коментарів для Постів */}
+                      {isVisible && renderCommentsBlock(id, type, key)}
+                    </article>
+                  );
+                }
+
+                // Якщо це Подія — рендеримо нову стильну картку, яку ти надіслав
+                return (
+                  <div
+                    key={key}
+                    className="group relative bg-white p-6 rounded-[2rem] shadow-xl shadow-blue-900/5 border border-gray-100 hover:border-blue-100 transition-all duration-300"
+                  >
+                    {/* Елегантна лінія-акцент під радіус картки */}
+                    <div className="absolute left-0 top-8 bottom-8 w-1 bg-blue-500 rounded-r-full scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-center"></div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+                      <div className="flex-grow">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h6 className="text-xl font-black text-gray-900 group-hover:text-blue-600 transition-colors tracking-tight leading-none">
+                            {item.title}
+                          </h6>
+                          <span className="px-2 py-0.5 bg-green-50 text-green-600 text-[10px] font-black uppercase rounded-lg border border-transparent">
+                            Active
+                          </span>
+                        </div>
+
+                        {/* Мета-дані: підпис автора */}
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-3">
+                          Подія • Організовано користувачем {profile.username}
+                        </p>
+
+                        <p className="text-sm text-gray-600 font-medium mb-4 line-clamp-2 leading-relaxed whitespace-pre-line">
+                          {item.description || "Користувач не додав опис події..."}
+                        </p>
+
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {item.location && (
+                            <div className="flex items-center text-xs font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg uppercase tracking-tighter">
+                              <span className="mr-1.5">📍</span> {item.location}
+                            </div>
+                          )}
+                          <div className="flex items-center text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg uppercase tracking-wider text-[10px]">
+                            <span className="mr-1.5">📅</span>
+                            {item.startTime && new Date(item.startTime).toLocaleDateString("uk-UA", {
+                              day: "numeric",
+                              month: "long",
+                            })}
+                          </div>
+                          <div className="flex items-center text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg uppercase tracking-wider text-[10px]">
+                            <span className="mr-1.5">👥</span>
+                            {item.participantCount} учасників
+                          </div>
+                          <button
+                            onClick={() => toggleJoinEvent(id)}
+                            className={`ml-auto px-5 py-2.5 rounded-xl font-black  tracking-wider transition-all active:scale-95 ${
+                              joinedEventIds.has(id)
+                                ? "bg-gray-100 text-gray-400"
+                                : "bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-500/10"
+                            }`}
+                          >
+                            {joinedEventIds.has(id) ? "Скасувати" : "Приєднатись"}
+                          </button>
+                        </div>               
+                      </div>
+                    </div>                   
+                  </div>
                 );
               })
             )}
           </div>
         </main>
-
       </div>
     </div>
   );
+
+  // Винесена функція рендеру коментарів для чистоти коду
+  function renderCommentsBlock(id, type, key) {
+    return (
+      <div className="mt-4 pt-4 border-t border-gray-100 space-y-4">
+        <div className="max-h-60 overflow-y-auto space-y-3 pr-1">
+          {comments[key]?.map((c, i) => (
+            <div key={i} className="bg-gray-50 p-3.5 rounded-2xl border border-gray-100/50">
+              <span className="font-black text-[10px] text-blue-600 uppercase block mb-0.5">
+                {c.authorUsername}
+              </span>
+              <p className="text-sm text-gray-600 font-medium">
+                {c.content}
+              </p>
+            </div>
+          ))}
+          {(!comments[key] || comments[key].length === 0) && (
+            <p className="text-center text-xs text-gray-400 py-4 italic">
+              Будьте першим, хто прокоментує!
+            </p>
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <input
+            className="flex-1 bg-gray-50 border border-transparent rounded-xl px-4 py-2.5 text-sm outline-none focus:bg-white focus:border-blue-500 transition-all font-medium"
+            placeholder="Напишіть коментар..."
+            value={commentInputs[key] || ""}
+            onChange={(e) =>
+              setCommentInputs((prev) => ({
+                ...prev,
+                [key]: e.target.value,
+              }))
+            }
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleAddComment(id, type);
+            }}
+          />
+          <button
+            onClick={() => handleAddComment(id, type)}
+            className="bg-blue-600 text-white px-4 rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center active:scale-95"
+          >
+            🚀
+          </button>
+        </div>
+      </div>
+    );
+  }
 }

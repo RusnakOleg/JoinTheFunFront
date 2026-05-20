@@ -33,7 +33,7 @@ export default function ProfileInfo({ profile }) {
       {/* DESCRIPTION */}
       {profile.description && (
         <div className="mb-5">
-          <p className="text-gray-700 leading-relaxed italic text-sm bg-gray-50 p-3 rounded-xl border-l-4 border-blue-400">
+          <p className="text-gray-700 leading-relaxed italic text-sm bg-gray-50 p-3 rounded-xl ">
             "{profile.description}"
           </p>
         </div>
