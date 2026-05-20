@@ -1,5 +1,6 @@
 import { Image } from "lucide-react";
 import { useState } from "react";
+import { ukraineCities } from "../../../data/ukraineCities";
 
 export default function ProfileEditForm({
   editModel,
@@ -86,18 +87,34 @@ export default function ProfileEditForm({
 
         {/* Місто та Вік в один рядок */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Випадаючий список міст */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-gray-500 uppercase ml-1">
               Місто
             </label>
-            <input
-              name="city"
-              className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none"
-              placeholder="Наприклад: Київ"
-              value={editModel.city}
-              onChange={handleChange}
-            />
+            <div className="relative">
+              <select
+                name="city"
+                className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none appearance-none cursor-pointer text-gray-700 font-medium"
+                value={editModel.city || ""}
+                onChange={handleChange}
+              >
+                <option value="" disabled hidden>Місто...</option>
+                {ukraineCities.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
+              </select>
+              {/* Кастомна стрілочка для гарного вигляду селекту */}
+              <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-400">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
           </div>
+
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-gray-500 uppercase ml-1">
               Вік
@@ -118,15 +135,22 @@ export default function ProfileEditForm({
           <label className="text-xs font-bold text-gray-500 uppercase ml-1">
             Стать
           </label>
-          <select
-            name="gender"
-            className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none appearance-none"
-            value={editModel.gender}
-            onChange={handleChange}
-          >
-            <option value="Male">Чоловіча</option>
-            <option value="Female">Жіноча</option>
-          </select>
+          <div className="relative">
+            <select
+              name="gender"
+              className="w-full px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none appearance-none cursor-pointer"
+              value={editModel.gender}
+              onChange={handleChange}
+            >
+              <option value="Male">Чоловіча</option>
+              <option value="Female">Жіноча</option>
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
         </div>
 
         {/* Опис */}
