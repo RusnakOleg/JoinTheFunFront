@@ -1,3 +1,4 @@
+import { Heart, MessageCircle, Plus, SendHorizontal } from "lucide-react";
 import { useState } from "react";
 
 export default function MyPosts({
@@ -36,10 +37,11 @@ export default function MyPosts({
           
 
           <button
-            className="flex-1 sm:flex-none px-5 py-3 text-xs font-black uppercase tracking-widest  bg-green-500 hover:bg-green-600 text-white rounded-xl  transition-all shadow-lg shadow-blue-600/10 active:scale-95"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-widest bg-green-500 hover:bg-green-600 text-white rounded-2xl transition-all shadow-lg shadow-blue-600/10 active:scale-95"
             onClick={openCreatePost}
           >
-            + Новий пост
+            <Plus className="w-4 h-4" strokeWidth={2.8} /> 
+            <span>Новий пост</span>
           </button>
         </div>
       </div>
@@ -81,7 +83,7 @@ export default function MyPosts({
               <div className="p-6 sm:p-8">
                 {/* Author Info */}
                 <div className="flex items-center gap-4 mb-3">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-black text-base shadow-md shadow-blue-500/10">
+                    <div className="w-10 h-10 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center font-black text-blue-600 text-base uppercase shadow-inner">
                     {post.authorUsername[0].toUpperCase()}
                   </div>
                   <div>
@@ -117,7 +119,7 @@ export default function MyPosts({
                       onClick={() => toggleLike(post.postId)}
                       className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gray-50 text-gray-500 font-black text-xs hover:bg-pink-50 hover:text-pink-500 transition-all active:scale-95"
                     >
-                      <span>❤️</span> {post.likeCount}
+                      <span><Heart  className="w-4 h-4 text-red-500" strokeWidth={2.8} fill="#ff0000"/></span> {post.likeCount}
                     </button>
                     <button
                       onClick={() => toggleComments(post.postId)}
@@ -127,7 +129,7 @@ export default function MyPosts({
                           : "bg-gray-50 text-gray-500 hover:bg-blue-50 hover:text-blue-600"
                       }`}
                     >
-                      <span>💬</span> {post.commentCount}
+                      <span><MessageCircle className="w-4 h-4 text-white-500" strokeWidth={2.8} /></span> {post.commentCount}
                     </button>
                   </div>
                 </div>
@@ -153,7 +155,7 @@ export default function MyPosts({
                           ))}
                           {comments[post.postId].length === 0 && (
                             <p className="text-center text-xs text-gray-400 font-medium italic py-4">
-                              Коментарів ще немає — будьте першим!
+                               Будьте першим, хто прокоментує!
                             </p>
                           )}
                         </>
@@ -165,11 +167,11 @@ export default function MyPosts({
                     </div>
 
                     {/* Comment Input */}
-                    <div className="flex gap-3 items-center mt-3">
-                      <div className="relative flex-grow">
+                    
+                     <div className="flex gap-2">
                         <input
-                          className="w-full pl-4 pr-12 py-3 text-sm bg-gray-50 border border-transparent rounded-xl focus:bg-white focus:border-blue-500 transition-all outline-none font-medium placeholder:text-gray-300"
-                          placeholder="Ваша думка..."
+                          className="flex-1 px-4 py-2.5 bg-gray-50 border border-transparent rounded-xl focus:bg-white focus:border-blue-500 transition-all outline-none font-medium text-xs sm:text-sm"
+                          placeholder="Напишіть коментар..."
                           value={commentInputs[post.postId] || ""}
                           onChange={(e) =>
                             handleChange(post.postId, e.target.value)
@@ -182,22 +184,17 @@ export default function MyPosts({
                           }}
                         />
                         <button
-                          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all disabled:opacity-20"
+                          className="bg-blue-600 text-white px-4 rounded-xl hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-500/10 text-xs font-bold"
                           disabled={!(commentInputs[post.postId] || "").trim()}
                           onClick={() => {
                             submitComment(post.postId, commentInputs[post.postId]);
                             handleChange(post.postId, "");
                           }}
                         >
-                          <svg
-                            viewBox="0 0 24 24"
-                            className="w-4 h-4 fill-current"
-                          >
-                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                          </svg>
+                          <SendHorizontal className="w-4 h-4 text-white-500" strokeWidth={2.8}/>
                         </button>
                       </div>
-                    </div>
+                    
                   </div>
                 )}
               </div>

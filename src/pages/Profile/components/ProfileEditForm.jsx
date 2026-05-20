@@ -1,3 +1,4 @@
+import { Image } from "lucide-react";
 import { useState } from "react";
 
 export default function ProfileEditForm({
@@ -66,7 +67,7 @@ export default function ProfileEditForm({
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  🖼️
+                  <Image className="w-6 h-6 " strokeWidth={2.8} />
                 </div>
               )}
             </div>

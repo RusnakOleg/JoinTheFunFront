@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { postsApi } from "../../api/postsApi";
 import { commentsApi } from "../../api/commentsApi";
 import { likesApi } from "../../api/likesApi";
+import { Heart, MessageCircle, MessageCircleMore, SendHorizontal } from "lucide-react";
 
 export default function FollowingPostsPage() {
   const { user } = useAuth();
@@ -117,7 +118,7 @@ export default function FollowingPostsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-2xl mx-auto"> {/* Зменшено загальну ширину контенту з max-w-3xl */}
+      <div className="max-w-3xl mx-auto"> {/* Зменшено загальну ширину контенту з max-w-3xl */}
         <h3 className="text-3xl font-black text-gray-900 mb-8 text-center tracking-tight">
           Стрічка підписок
         </h3>
@@ -137,7 +138,7 @@ export default function FollowingPostsPage() {
                 Тут поки порожньо.. 
               </p>
               <p className="text-gray-400 text-sm">
-                Підпишіться на когось, щоб бачити їхні пости! ✨
+                Підпишіться на когось, щоб бачити їхні пости!
               </p>
             </div>
           ) : (
@@ -156,12 +157,12 @@ export default function FollowingPostsPage() {
                       {post.authorUsername?.charAt(0)}
                     </div>
                     <div>
-                      <p className="font-black text-gray-900 text-sm leading-tight">
+                    <p className="font-black text-gray-900 tracking-tight leading-none mb-1 text-base">
                         {post.authorUsername}
                       </p>
-                      <span className="inline-block px-1.5 py-0.5 bg-gray-100 text-gray-400 text-[8px] font-bold rounded uppercase tracking-wider mt-0.5">
-                        Нещодавно
-                      </span>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                       {new Date(post.createdAt).toLocaleDateString("uk-UA")}
+                    </p>
                     </div>
                   </div>
 
@@ -191,7 +192,7 @@ export default function FollowingPostsPage() {
                           : "bg-gray-50 text-gray-400 border-transparent hover:bg-gray-100 hover:text-gray-500"
                       }`}
                     >
-                      <span>{likedPosts.has(post.postId) ? "❤️" : "🤍"}</span>
+                      <span>{likedPosts.has(post.postId) ? <Heart  className="w-4 h-4 text-red-500" strokeWidth={2.8} fill="#ff0000"/> : <Heart  className="w-4 h-4 text-white-500" strokeWidth={2.8}  fill="#ffffff"/>}</span>
                       <span>{post.likeCount}</span>
                     </button>
 
@@ -203,7 +204,7 @@ export default function FollowingPostsPage() {
                           : "bg-gray-50 text-gray-400 border-transparent hover:bg-gray-100 hover:text-gray-500"
                       }`}
                     >
-                      💬 {post.commentCount}
+                      <MessageCircle className="w-4 h-4 text-white-500" strokeWidth={2.8} /> {post.commentCount}
                     </button>
                   </div>
 
@@ -226,7 +227,7 @@ export default function FollowingPostsPage() {
                         ))}
                         {(!comments[key] || comments[key].length === 0) && (
                           <p className="text-center text-[11px] text-gray-400 py-3 italic font-medium">
-                            Будьте першим, хто прокоментує! 😊
+                            Будьте першим, хто прокоментує!
                           </p>
                         )}
                       </div>
@@ -249,7 +250,7 @@ export default function FollowingPostsPage() {
                           onClick={() => handleAddComment(post.postId)}
                           className="bg-blue-600 text-white px-4 rounded-xl hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-500/10 text-xs font-bold"
                         >
-                          🚀
+                          <SendHorizontal className="w-4 h-4 text-white-500" strokeWidth={2.8}/>
                         </button>
                       </div>
                     </div>

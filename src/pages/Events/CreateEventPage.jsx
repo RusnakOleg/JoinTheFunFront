@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { eventsApi } from "../../api/eventsApi";
+import { CalendarDays, MapPin } from "lucide-react";
 
 export default function CreateEventPage() {
   const navigate = useNavigate();
@@ -109,7 +110,7 @@ export default function CreateEventPage() {
             </label>
             <div className="relative group">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm group-focus-within:scale-105 transition-transform pointer-events-none">
-                📍
+                <MapPin className="w-4 h-4 text-red-500"/>
               </span>
               <input
                 className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 transition-all outline-none font-medium text-sm text-gray-900 placeholder:text-gray-300"
@@ -129,7 +130,7 @@ export default function CreateEventPage() {
             </label>
             <div className="relative group">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm pointer-events-none">
-                📅
+                <CalendarDays className="w-4 h-4 text-gray-500"/>
               </span>
               <input
                 type="datetime-local"
@@ -146,7 +147,7 @@ export default function CreateEventPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 mt-4 bg-blue-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-blue-500/10 hover:bg-blue-700 active:scale-95 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:shadow-none flex items-center justify-center gap-2"
+            className="w-full py-4 mt-4 bg-blue-600 text-white text-xs font-bold uppercase tracking-wider rounded-2xl shadow-lg shadow-blue-500/10 hover:bg-blue-700 active:scale-95 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:shadow-none flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

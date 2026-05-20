@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -97,7 +98,7 @@ export default function Login() {
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-xl grayscale hover:grayscale-0 transition-all active:scale-90"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? "👁️" : "🙈"}
+                {showPassword ? <Eye className="w-6 h-6 text-gray-500" /> : <EyeOff className="w-6 h-6 text-gray-500" />}
               </button>
             </div>
           </div>
@@ -105,7 +106,7 @@ export default function Login() {
           {/* Error Message */}
           {message && (
             <div className="bg-red-50 text-red-600 p-3 rounded-2xl text-[11px] font-bold border border-red-100 animate-in zoom-in-95 duration-300">
-              ⚠️ {message}
+               {message}
             </div>
           )}
 

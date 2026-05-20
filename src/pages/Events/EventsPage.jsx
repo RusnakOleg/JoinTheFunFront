@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { eventsApi } from "../../api/eventsApi";
 import { participantsApi } from "../../api/participantsApi";
 import { useAuth } from "../../context/AuthContext";
+import { CalendarDays, MapPin, Plus, User, Users} from "lucide-react";
 
 export default function EventsPage() {
   const navigate = useNavigate();
@@ -110,18 +111,19 @@ export default function EventsPage() {
           </div>
 
           <button
-            className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-6 py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-green-500/10 transition-all active:scale-95"
-            onClick={() => navigate("/create-event")}
-          >
-            + Створити подію
-          </button>
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-6 py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-green-500/10 transition-all active:scale-95"
+          onClick={() => navigate("/create-event")}
+        >
+          <Plus className="w-4 h-4" strokeWidth={2.8} /> 
+          <span>Створити подію</span>
+        </button>
         </div>
 
         {/* Пошук */}
         <div className="bg-white p-4 rounded-[2rem] shadow-xl shadow-blue-900/5 border border-gray-100 mb-8 flex flex-col sm:flex-row gap-3">
           <input
             className="flex-1 px-5 py-3 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 transition-all outline-none font-medium text-sm"
-            placeholder="📍 Введіть назву міста (напр. Київ)..."
+            placeholder="Введіть назву міста (напр. Київ)..."
             value={searchCity}
             onChange={(e) => setSearchCity(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSearch()}
@@ -137,7 +139,7 @@ export default function EventsPage() {
               className="bg-gray-100 text-gray-500 px-5 py-3 rounded-2xl font-bold text-sm transition-all hover:bg-gray-200 active:scale-95"
               onClick={handleReset}
             >
-              ✖
+             Скинути
             </button>
           </div>
         </div>
@@ -165,11 +167,10 @@ export default function EventsPage() {
               >
                 <div>
                   {/* Верхня плашка: Іконка + Місто */}
-                  <div className="flex items-center justify-between mb-4">
-                    
-                    <span className="bg-gray-50 text-gray-500 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider border border-gray-100">
-                      📍 {ev.location}
-                    </span>
+                  <div className="flex items-center justify-between mb-4">                    
+                    <span className="inline-flex items-center gap-1.5 bg-gray-50 text-gray-500 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider border border-gray-100">
+                      <MapPin className="w-4 h-4 text-red-500" /> {ev.location}
+                    </span>         
                   </div>
 
                   {/* Назва та опис */}
@@ -177,7 +178,7 @@ export default function EventsPage() {
                     {ev.title}
                   </h5>
 
-                  <p className="text-gray-500 text-xs sm:text-sm font-medium line-clamp-2 mb-5 h-9 leading-relaxed">
+                  <p className="text-gray-500 text-xs sm:text-sm font-medium line-clamp-2 mb-3 h-9 leading-relaxed">
                     {ev.description || "Опис події відсутній"}
                   </p>
 
@@ -185,7 +186,7 @@ export default function EventsPage() {
                   <div className="space-y-2.5 mb-6">
                     <div className="flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 text-xs shadow-inner">
-                        📅
+                        <CalendarDays className="w-4 h-4 text-gray-500"/>
                       </div>
                       <span className="text-xs font-bold text-gray-600">
                         {new Date(ev.startTime).toLocaleString("uk-UA", {
@@ -199,7 +200,7 @@ export default function EventsPage() {
 
                     <div className="flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 text-xs shadow-inner">
-                        👥
+                        <Users className="w-4 h-4 text-gray-500"/>
                       </div>
                       <span className="text-xs font-bold text-gray-600">
                         {ev.participantCount} учасників
@@ -208,7 +209,7 @@ export default function EventsPage() {
 
                     <div className="flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 text-xs shadow-inner">
-                        👤
+                        <User className="w-4 h-4 text-gray-500"/>
                       </div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 truncate max-w-[180px]">
                         Автор: {ev.creatorUsername}
@@ -219,7 +220,7 @@ export default function EventsPage() {
 
                 {/* Кнопка дії (Завжди притиснута до низу картки) */}
                 <button
-                  className={`w-full py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all active:scale-95 border ${
+                  className={`w-full py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all active:scale-95 border ${
                     joinedEventIds.has(ev.eventId)
                       ? "bg-gray-100 text-gray-400 border-transparent hover:bg-red-50 hover:text-red-500 hover:border-red-100"
                       : "bg-blue-600 text-white border-transparent hover:bg-blue-700 shadow-lg shadow-blue-500/10"

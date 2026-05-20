@@ -186,9 +186,9 @@ export default function FriendsPage() {
                 <Link
                   to={`/user-profile/${profile.userId}`}
                   key={profile.userId}
-                  className="group"
+                  className="group no-underline "
                 >
-                  <div className="bg-white p-5 rounded-[2rem] shadow-sm border border-gray-100 hover:border-blue-300 hover:shadow-md transition-all duration-300 flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                  <div className=" bg-white p-5 rounded-[2rem] shadow-sm border border-gray-100 hover:border-blue-300 hover:shadow-md transition-all duration-300 flex flex-col sm:flex-row items-center sm:items-start gap-5">
                     <div className="relative">
                       <img
                         src={parseImg(profile.avatarUrl)}
@@ -200,11 +200,11 @@ export default function FriendsPage() {
 
                     <div className="flex-1 text-center sm:text-left">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                        <h5 className="text-xl font-black text-gray-900 group-hover:text-blue-600 transition-colors">
+                        <h5 className="underline text-xl font-black text-gray-900 group-hover:text-blue-600 transition-colors">
                           {profile.username}
                         </h5>
-                        <span className="inline-block px-3 py-1 bg-blue-50 text-blue-600 text-xs font-black rounded-full uppercase tracking-tighter">
-                          {profile.city} • {profile.age} р.
+                        <span  className=" inline-block px-3 py-1 bg-blue-50 text-blue-600 text-xs font-black rounded-full uppercase">
+                          {profile.city} - {profile.age} років
                         </span>
                       </div>
 
@@ -212,12 +212,12 @@ export default function FriendsPage() {
                         {profile.description || "Користувач не додав опис"}
                       </p>
 
-                      <div className="flex flex-wrap justify-center sm:justify-start gap-2">
+                      <div className="flex flex-wrap justify-center sm:justify-start gap-2 ">
                         {profile.interests?.length > 0 ? (
                           profile.interests.map((interest, idx) => (
                             <span
                               key={idx}
-                              className="text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded-lg uppercase tracking-wider"
+                              className="text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded-lg uppercase tracking-wider "
                             >
                               #{interest}
                             </span>

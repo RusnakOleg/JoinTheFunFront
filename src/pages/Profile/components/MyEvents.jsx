@@ -1,3 +1,4 @@
+import { CalendarDays, MapPin, Plus, Trash2, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function MyEvents({ events, show, onToggle, deleteEvent }) {
@@ -17,9 +18,10 @@ export default function MyEvents({ events, show, onToggle, deleteEvent }) {
 
           <Link
             to="/create-event"
-            className="no-underline flex-1 sm:flex-none px-5 py-3 text-xs font-black uppercase tracking-widest  bg-green-500 hover:bg-green-600 text-white rounded-xl  transition-all shadow-lg shadow-blue-600/10 active:scale-95"
+            className="no-underline flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-widest bg-green-500 hover:bg-green-600 text-white rounded-2xl transition-all shadow-lg shadow-blue-600/10 active:scale-95"
           >
-            + Створити
+            <Plus className="w-4 h-4" strokeWidth={2.8} />  
+            <span>Створити</span>
           </Link>
         </div>
       </div>
@@ -64,18 +66,18 @@ export default function MyEvents({ events, show, onToggle, deleteEvent }) {
                     <div className="flex flex-wrap gap-2">
                       {ev.location && (
                         <div className="flex items-center text-xs font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg uppercase tracking-tighter">
-                          <span className="mr-1.5">📍</span> {ev.location}
+                          <span className="mr-1.5"><MapPin className="w-4 h-4 text-red-500"/></span> {ev.location}
                         </div>
                       )}
-                      <div className="flex items-center text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg uppercase tracking-wider text-[10px]">
-                        <span className="mr-1.5">📅</span>
+                      <div className="flex items-center text-xs font-bold text-gray-500 bg-blue-50 px-3 py-1.5 rounded-lg uppercase tracking-wider text-[10px]">
+                        <span className="mr-1.5"><CalendarDays className="w-4 h-4 text-gray-500"/></span>
                         {new Date(ev.startTime).toLocaleDateString("uk-UA", {
                           day: "numeric",
                           month: "long",
                         })}
                       </div>
-                      <div className="flex items-center text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg uppercase tracking-wider text-[10px]">
-                        <span className="mr-1.5">👥</span>
+                      <div className="flex items-center text-xs font-bold text-gray-500 bg-purple-50 px-3 py-1.5 rounded-lg uppercase tracking-wider text-[10px]">
+                        <span className="mr-1.5"><Users className="w-4 h-4 text-gray-500"/></span>
                         {ev.participantCount} учасників
                       </div>
                     </div>
@@ -96,21 +98,7 @@ export default function MyEvents({ events, show, onToggle, deleteEvent }) {
                       }}
                       title="Видалити подію"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2.5} /* Більш впевнена лінія */
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          disabled
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
+                      <Trash2 className="h-5 w-5" strokeWidth={2.5} />
                     </button>
                   </div>
                 </div>

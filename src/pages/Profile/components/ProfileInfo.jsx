@@ -23,7 +23,8 @@ export default function ProfileInfo({ profile }) {
             {profile.username}
           </h5>
           <p className="text-gray-500 text-sm font-medium flex items-center gap-1 mt-1">
-            <span>📍 {profile.city || "Місто не вказано"}</span>
+            <span className="text-gray-300 mx-1">•</span>
+            <span>{profile.city || "Місто не вказано"}</span>
             <span className="text-gray-300 mx-1">•</span>
             <span>{profile.age} років</span>
           </p>
