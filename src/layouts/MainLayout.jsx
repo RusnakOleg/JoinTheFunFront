@@ -13,7 +13,7 @@ export default function MainLayout() {
     if (user?.role === "Admin") {
       return [
         { name: "Модерація користувачів", path: "/admin" },
-        // { name: "Керування інтересами", path: "/admin/interests" }
+        { name: "Модерація подій", path: "/admin/events" },
       ];
     }
     

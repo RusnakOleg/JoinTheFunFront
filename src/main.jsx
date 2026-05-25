@@ -17,6 +17,7 @@ import FollowingPostsPage from "./pages/FollowingPosts/FollowingPostsPage";
 import EventsPage from "./pages/Events/EventsPage";
 import "./index.css";
 import AdminPage from "./pages/Admin/AdminPage";
+import AdminEventsPage from "./pages/Admin/AdminEventsPage";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -31,16 +32,25 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="about" element={<About />} />
           <Route path="register" element={<Register />} />
           <Route path="login" element={<Login />} />
-          {/* <Route path="/user-profile/:userId" element={<UserProfilePage />} /> */}
 
           {/* Захищені сторінки */}
 
-          {/* Сторінка адміна, доступна ТІЛЬКИ для Admin */}
+          {/* 🔴 Сторінка модерації користувачів (ТІЛЬКИ для Admin) */}
           <Route
             path="/admin"
             element={
               <ProtectedRoute allowedRoles={["Admin"]}>
-                <AdminPage /> {/* Цю сторінку ми зараз створимо */}
+                <AdminPage /> 
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 🔴 Окремий правильний маршрут для сторінки модерації подій */}
+          <Route
+            path="/admin/events"
+            element={
+              <ProtectedRoute allowedRoles={["Admin"]}>
+                <AdminEventsPage />
               </ProtectedRoute>
             }
           />

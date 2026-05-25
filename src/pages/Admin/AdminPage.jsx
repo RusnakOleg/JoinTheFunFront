@@ -66,8 +66,8 @@ export default function AdminPage() {
         
         {/* Заголовок */}
         <div className="mb-8">
-          <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">
-            Панель Адміністратора
+          <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text text-amber-600">
+            Модерація користувачів
           </h1>
           <p className="text-gray-400 mt-2 text-sm">
             Управління користувачами, модерація облікових записів та контроль безпеки JoinTheFun.
@@ -89,9 +89,9 @@ export default function AdminPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-gray-800 bg-gray-900/30 text-gray-400 text-xs uppercase tracking-wider">
+                <tr className="border-b border-gray-800 bg-gray-900/30 text-gray-400 text-xs uppercase tracking-wider ">
                   <th className="p-4 font-semibold">Користувач</th>
-                  <th className="p-4 font-semibold">Email</th>
+                  <th className="p-4 font-semibold">ID</th>
                   <th className="p-4 font-semibold">Місто</th>
                   <th className="p-4 font-semibold">Статус</th>
                   <th className="p-4 font-semibold text-right">Дії</th>
@@ -113,12 +113,12 @@ export default function AdminPage() {
                         {/* Юзернейм */}
                         <td className="p-4">
                           <div className="font-semibold text-gray-200">{u.username}</div>
-                          <div className="text-xs text-gray-500">ID: {u.userId?.substring(0, 8)}...</div>
+                          
                         </td>
                         
-                        {/* Email */}
+                        {/* ID */}
                         <td className="p-4 text-gray-300 text-sm">
-                          {u.email || "—"}
+                          {u.userId}
                         </td>
                         
                         {/* Місто */}
