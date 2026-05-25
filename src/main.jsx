@@ -16,6 +16,7 @@ import UserProfilePage from "./pages/UserProfile/UserProfilePage";
 import FollowingPostsPage from "./pages/FollowingPosts/FollowingPostsPage";
 import EventsPage from "./pages/Events/EventsPage";
 import "./index.css";
+import AdminPage from "./pages/Admin/AdminPage";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -33,6 +34,17 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           {/* <Route path="/user-profile/:userId" element={<UserProfilePage />} /> */}
 
           {/* Захищені сторінки */}
+
+          {/* Сторінка адміна, доступна ТІЛЬКИ для Admin */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={["Admin"]}>
+                <AdminPage /> {/* Цю сторінку ми зараз створимо */}
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="profile"
             element={

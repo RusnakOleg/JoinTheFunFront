@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Eye, EyeOff } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
 
   const [form, setForm] = useState({
     username: "",
@@ -22,17 +23,35 @@ export default function Login() {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage("");
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setMessage("");
 
-    try {
-      await login(form);
-      navigate("/profile", { replace: true });
-    } catch (err) {
-      setMessage("Невірне ім'я користувача або пароль.");
+  try {
+    // 1. Викликаємо твою функцію входу, яка записує токен у localStorage і стейт
+    await login(form);
+    
+    // 2. Дістаємо щойно збережений токен
+    const token = localStorage.getItem("token");
+    
+    if (token) {
+      const decoded = jwtDecode(token);
+      const role = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+      
+      // 3. Якщо це Адмін — перенаправляємо в адмінку
+      if (role === "Admin") {
+        navigate("/admin", { replace: true });
+        return;
+      }
     }
-  };
+
+    // 4. Якщо це звичайний користувач — відправляємо, як і раніше, на профіль
+    navigate("/profile", { replace: true });
+    
+  } catch (err) {
+    setMessage("Невірне ім'я користувача або пароль.");
+  }
+};
 
   return (
     <div className="min-h-[90vh] flex items-center justify-center px-4 animate-in fade-in duration-700">
