@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { adminApi } from "../../api/adminApi"; 
 import { Search, X } from "lucide-react"; 
+import { Link } from "react-router-dom";
 
 
 // хук для затримки оновлення тексту (Debounce)
@@ -209,9 +210,13 @@ export default function AdminPage() {
                       <tr key={u.id || u.userId} className="hover:bg-gray-850/40 transition-colors duration-200">
                         {/* Юзернейм */}
                         <td className="p-4">
-                          <div className="font-semibold text-gray-200">{u.username}</div>
-                          
-                        </td>
+                        <Link 
+                          to={`/admin/user/${u.userId}`} 
+                          className="font-semibold text-gray-200 hover:text-indigo-400 transition-colors underline "
+                        >
+                          {u.username}
+                        </Link>
+                      </td>
                         
                         {/* ID */}
                         <td className="p-4 text-gray-300 text-sm">
