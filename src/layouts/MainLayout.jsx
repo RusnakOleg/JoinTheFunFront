@@ -13,7 +13,6 @@ export default function MainLayout() {
     if (user?.role === "Admin") {
       return [
         { name: "Модерація користувачів", path: "/admin" },
-        // Сюди в майбутньому можна додати лінки на окремі сторінки адміна:
         // { name: "Керування інтересами", path: "/admin/interests" }
       ];
     }

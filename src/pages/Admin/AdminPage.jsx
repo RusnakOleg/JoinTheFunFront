@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { adminApi } from "../../api/adminApi"; // перевірь правильність шляху до твого adminApi
+import { adminApi } from "../../api/adminApi"; 
 
 export default function AdminPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Функція завантаження списку користувачів
   const fetchUsers = async () => {
     try {
       setLoading(true);

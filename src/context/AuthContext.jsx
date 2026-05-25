@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { authApi } from "../api/authApi";
-import { jwtDecode } from "jwt-decode"; // 🔴 Додаємо імпорт для розшифровки токена
+import { jwtDecode } from "jwt-decode"; // імпорт для розшифровки токена
 
 const AuthContext = createContext();
 
@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
     const username = localStorage.getItem("username");
 
     if (token && userId && username) {
-      const role = getRoleFromToken(token); // 🔴 Дістаємо роль
+      const role = getRoleFromToken(token); //  Дістаємо роль
       setUser({ userId, username, role });
     }
 
@@ -42,7 +42,7 @@ export function AuthProvider({ children }) {
     localStorage.setItem("userId", data.userId);
     localStorage.setItem("username", data.username);
 
-    const role = getRoleFromToken(data.token); // 🔴 Дістаємо роль з нового токена
+    const role = getRoleFromToken(data.token); //  Дістаємо роль з нового токена
 
     setUser({
       userId: data.userId,
