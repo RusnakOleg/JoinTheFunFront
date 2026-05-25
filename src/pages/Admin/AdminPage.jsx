@@ -1,10 +1,35 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { adminApi } from "../../api/adminApi"; 
+import { Search, X } from "lucide-react"; 
+
+
+// хук для затримки оновлення тексту (Debounce)
+function useDebounce(value, delay = 300) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export default function AdminPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Стані для контрольованих інпутів пошуку
+  const [searchUsername, setSearchUsername] = useState("");
+  const [searchCity, setSearchCity] = useState("");
+
+  // Дебаунс-значення для текстових полів
+  const debouncedUsername = useDebounce(searchUsername, 300);
+  const debouncedCity = useDebounce(searchCity, 300);
 
   const fetchUsers = async () => {
     try {
@@ -23,6 +48,28 @@ export default function AdminPage() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  // Оптимізована фільтрація за допомогою useMemo
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+
+    const cleanUsername = debouncedUsername.trim().toLowerCase();
+    const cleanCity = debouncedCity.trim().toLowerCase();
+
+    return users.filter((u) => {
+      // Фільтр нікнейму
+      if (cleanUsername && !u.username?.toLowerCase().includes(cleanUsername)) {
+        return false;
+      }
+
+      // Фільтр міста
+      if (cleanCity && !u.city?.toLowerCase().includes(cleanCity)) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [users, debouncedUsername, debouncedCity]);
 
   // Логіка перевірки статусу бану
   const isUserBanned = (lockoutEnd) => {
@@ -80,10 +127,60 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* 🔍 Блок пошуку (Темний дизайн під адмінку) */}
+        <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl shadow-xl mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            {/* Пошук за нікнеймом */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <input
+                type="text"
+                className="w-full pl-11 pr-10 py-3 bg-gray-950 border border-gray-800 rounded-xl focus:outline-none focus:border-indigo-500 transition-all text-sm font-medium text-gray-200 placeholder-gray-500"
+                placeholder="Пошук за нікнеймом..."
+                value={searchUsername}
+                onChange={(e) => setSearchUsername(e.target.value)}
+              />
+              {searchUsername && (
+                <button
+                  onClick={() => setSearchUsername("")}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Пошук за містом */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <input
+                type="text"
+                className="w-full pl-11 pr-10 py-3 bg-gray-950 border border-gray-800 rounded-xl focus:outline-none focus:border-indigo-500 transition-all text-sm font-medium text-gray-200 placeholder-gray-500"
+                placeholder="Фільтр за містом..."
+                value={searchCity}
+                onChange={(e) => setSearchCity(e.target.value)}
+              />
+              {searchCity && (
+                <button
+                  onClick={() => setSearchCity("")}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+          </div>
+        </div>
+
         {/* Таблиця користувачів */}
         <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-xl">
-          <div className="p-5 border-b border-gray-800 bg-gray-900/50">
+          <div className="p-5 border-b border-gray-800 bg-gray-900/50 flex justify-between items-center">
             <h3 className="font-semibold text-lg text-gray-200">Зареєстровані профілі</h3>
+            <span className="text-xs font-bold px-2.5 py-1 bg-gray-800 rounded-lg text-gray-400 border border-gray-700">
+              Знайдено: {filteredUsers.length}
+            </span>
           </div>
           
           <div className="overflow-x-auto">
@@ -98,14 +195,14 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
-                {users.length === 0 ? (
+                {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan="5" className="p-8 text-center text-gray-500">
                       Користувачів не знайдено.
                     </td>
                   </tr>
                 ) : (
-                  users.map((u) => {
+                  filteredUsers.map((u) => {
                     const banned = isUserBanned(u.lockoutEnd);
 
                     return (
