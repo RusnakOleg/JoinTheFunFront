@@ -73,6 +73,7 @@ export default function AdminUserProfilePage() {
   // Хендлери дій адміна
   const handleBanToggle = async () => {
     const banned = isUserBanned(userProfile?.lockoutEnd);
+    
     if (banned) {
       try {
         await adminApi.unbanUser(userId);
@@ -81,13 +82,25 @@ export default function AdminUserProfilePage() {
         alert("Помилка при спробі розблокувати користувача.");
       }
     } else {
-      if (window.confirm("Ви впевнені, що хочете заблокувати цього користувача на 7 днів?")) {
-        try {
-          await adminApi.banUser(userId, 7);
-          loadUserData();
-        } catch (err) {
-          alert("Помилка при спробі заблокувати користувача.");
-        }
+      // Запитуємо у адміна кількість днів для блокування
+      const daysInput = window.prompt("На скільки днів заблокувати користувача?", "7");
+      
+      // Якщо адмін натиснув "Скасувати"
+      if (daysInput === null) return;
+
+      const days = parseInt(daysInput.trim(), 10);
+
+      // Валідація введеного значення
+      if (isNaN(days) || days <= 0) {
+        alert("Будь ласка, введіть коректну кількість днів (додатне число).");
+        return;
+      }
+
+      try {
+        await adminApi.banUser(userId, days);
+        loadUserData();
+      } catch (err) {
+        alert("Помилка при спробі заблокувати користувача.");
       }
     }
   };
@@ -161,7 +174,7 @@ export default function AdminUserProfilePage() {
                 <h1 className="text-2xl font-extrabold text-gray-100">{userProfile.username}</h1>
                 {banned ? (
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
-                    Забанений
+                    Забанений до {new Date(userProfile.lockoutEnd).toLocaleDateString()}
                   </span>
                 ) : (
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -187,7 +200,7 @@ export default function AdminUserProfilePage() {
             }`}
           >
             <ShieldAlert className="w-4 h-4" />
-            <span>{banned ? "Розблокувати" : "Забанити на 7 днів"}</span>
+            <span>{banned ? "Розблокувати" : "Забанити"}</span>
           </button>
         </div>
 

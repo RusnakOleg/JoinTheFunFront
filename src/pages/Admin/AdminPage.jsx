@@ -80,15 +80,25 @@ export default function AdminPage() {
 
   // Хендлер блокування
   const handleBan = async (userId) => {
-    if (window.confirm("Ви впевнені, що хочете заблокувати цього користувача на 7 днів?")) {
-      try {
-        await adminApi.banUser(userId, 7);
-        fetchUsers(); // Перезавантажуємо дані, щоб оновити інтерфейс
-      } catch (err) {
-        alert("Помилка при спробі заблокувати користувача.");
-      }
-    }
-  };
+  const daysInput = window.prompt("На скільки днів заблокувати користувача?", "7");
+  
+  if (daysInput === null) return;
+
+  const days = parseInt(daysInput.trim(), 10);
+
+  if (isNaN(days) || days <= 0) {
+    alert("Будь ласка, введіть коректну кількість днів (додатне число).");
+    return;
+  }
+
+  try {
+    await adminApi.banUser(userId, days);
+    fetchUsers(); 
+  } catch (err) {
+    console.error("Помилка бану користувача:", err);
+    alert("Помилка при спробі заблокувати користувача.");
+  }
+};
 
   // Хендлер розблокування
   const handleUnban = async (userId) => {
@@ -128,7 +138,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* 🔍 Блок пошуку (Темний дизайн під адмінку) */}
+        {/*  Блок пошуку (Темний дизайн під адмінку) */}
         <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl shadow-xl mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
