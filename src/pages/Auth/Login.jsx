@@ -28,7 +28,7 @@ const handleSubmit = async (e) => {
   setMessage("");
 
   try {
-    // 1. Викликаємо твою функцію входу, яка записує токен у localStorage і стейт
+    // 1. Викликаємо функцію входу
     await login(form);
     
     // 2. Дістаємо щойно збережений токен
@@ -38,19 +38,26 @@ const handleSubmit = async (e) => {
       const decoded = jwtDecode(token);
       const role = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
       
-      // 3. Якщо це Адмін — перенаправляємо в адмінку
+      // 3. Якщо це Адмін — в адмінку
       if (role === "Admin") {
         navigate("/admin", { replace: true });
         return;
       }
     }
 
-    // 4. Якщо це звичайний користувач — відправляємо, як і раніше, на профіль
+    // 4. Якщо звичайний користувач — на профіль
     navigate("/profile", { replace: true });
     
   } catch (err) {
+  // Дістаємо повідомлення, яке ми передали в об'єкті { message: "..." } з бекенду
+  const serverMessage = err.response?.data?.message;
+  
+  if (serverMessage) {
+    setMessage(serverMessage);
+  } else {
     setMessage("Невірне ім'я користувача або пароль.");
   }
+}
 };
 
   return (

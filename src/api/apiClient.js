@@ -4,7 +4,6 @@ const api = axios.create({
   baseURL: "http://localhost:5101/api",
 });
 
-// автоматично підставляємо JWT токен, якщо він є
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -16,16 +15,25 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response, 
   (error) => {
-    // Якщо сервер повернув 401 (токен недійсний або користувач у бані)
+
+    const requestUrl = error.config?.url ? error.config.url.toLowerCase() : "";
+
+    // Перевіряємо різні варіанти написання роуту логіну (з косою рискою чи без, повний чи відносний)
+    if (requestUrl.includes("auth/login") || requestUrl.endsWith("/login")) {
+      return Promise.reject(error);
+    }
+
+    //  Для всіх ІНШИХ запитів (коли користувач вже сидить на сайті і в нього протух токен)
     if (error.response && error.response.status === 401) {
       alert("Доступ заборонено або ваш акаунт було заблоковано.");
       
       localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("username");
       
-      // Перенаправляємо на сторінку входу
       window.location.href = "/login";
     }
+    
     return Promise.reject(error);
   }
 );
