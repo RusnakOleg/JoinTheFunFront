@@ -19,6 +19,7 @@ import "./index.css";
 import AdminPage from "./pages/Admin/AdminPage";
 import AdminEventsPage from "./pages/Admin/AdminEventsPage";
 import AdminUserProfilePage from "./pages/Admin/AdminUserProfilePage";
+import AdminInterestsPage from "./pages/Admin/AdminInterestsPage";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -52,6 +53,15 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             element={
               <ProtectedRoute allowedRoles={["Admin"]}>
                 <AdminEventsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+           path="/admin/interests"
+            element={
+              <ProtectedRoute allowedRoles={["Admin"]}>
+                <AdminInterestsPage />
               </ProtectedRoute>
             }
           />

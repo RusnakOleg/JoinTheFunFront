@@ -95,7 +95,7 @@ export default function AdminEventsPage() {
         
         {/* Заголовок */}
         <div className="mb-8">
-          <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text text-amber-600">
+          <h1 className="text-3xl font-extrabold tracking-tight bg-clip-text text-amber-600">
             Модерація подій
           </h1>
           <p className="text-gray-400 mt-2 text-sm">
@@ -110,7 +110,7 @@ export default function AdminEventsPage() {
           </div>
         )}
 
-        {/* 🔍 Панель пошуку в темно-кіберпанк стилі */}
+        {/*  Панель пошуку в темно-кіберпанк стилі */}
         <div className="bg-gray-900 border border-gray-800 p-4 rounded-2xl shadow-xl mb-6 flex items-center gap-3 relative">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />

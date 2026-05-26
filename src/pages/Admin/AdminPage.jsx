@@ -124,7 +124,7 @@ export default function AdminPage() {
         
         {/* Заголовок */}
         <div className="mb-8">
-          <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text text-amber-600">
+          <h1 className="text-3xl font-extrabold tracking-tight bg-clip-text text-amber-600">
             Модерація користувачів
           </h1>
           <p className="text-gray-400 mt-2 text-sm">
@@ -139,7 +139,7 @@ export default function AdminPage() {
         )}
 
         {/*  Блок пошуку (Темний дизайн під адмінку) */}
-        <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl shadow-xl mb-6">
+        <div className="bg-gray-900 border border-gray-800 p-4 rounded-2xl shadow-xl mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             {/* Пошук за нікнеймом */}

@@ -14,6 +14,7 @@ export default function MainLayout() {
       return [
         { name: "Модерація користувачів", path: "/admin" },
         { name: "Модерація подій", path: "/admin/events" },
+        { name: "Модерація інтересів", path: "/admin/interests" },
       ];
     }
     
